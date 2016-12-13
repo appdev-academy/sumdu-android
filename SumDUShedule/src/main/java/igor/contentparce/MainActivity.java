@@ -5,8 +5,12 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.SearchView;
 import android.widget.TabHost;
 
 import com.google.gson.Gson;
@@ -30,8 +34,10 @@ public class MainActivity extends TabActivity {
     final String TEACHERS_KEY = "teachers";
     final String AUDITORIUMS_KEY = "auditoriums";
 
+    SearchView searchView;
     ListView listView;
     TabHost tabHost;
+    ArrayAdapter<String> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,10 +46,42 @@ public class MainActivity extends TabActivity {
 
         listView = (ListView) findViewById(R.id.lvContent);
 
+        adapter = new ArrayAdapter<> (
+                MainActivity.this,
+                android.R.layout.simple_list_item_1);
+        listView.setAdapter(adapter);
+
         setupTabBar();
 
         new ParseAuditoriumsGroupsTeachers().execute();
         reloadData();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.search, menu);
+        MenuItem item = menu.findItem(R.id.menu_search);
+        searchView = (SearchView)item.getActionView();
+
+        if (searchView == null) {
+            Log.d(TAG, "Search view is null");
+        } else {
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    return false;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    Log.d(TAG, "Query: " + newText);
+                    adapter.getFilter().filter(newText);
+                    return false;
+                }
+            });
+        }
+        return super.onCreateOptionsMenu(menu);
     }
 
     public void setupTabBar() {
