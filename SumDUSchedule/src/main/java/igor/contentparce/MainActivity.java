@@ -8,6 +8,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SearchView;
@@ -34,27 +36,41 @@ public class MainActivity extends TabActivity {
     final String TEACHERS_KEY = "teachers";
     final String AUDITORIUMS_KEY = "auditoriums";
 
-    SearchView searchView;
-    ListView listView;
-    TabHost tabHost;
-    ArrayAdapter<String> adapter;
+    private SearchView searchView;
+    private ListView listView;
+    private TabHost tabHost;
+    private String searchQuery = "";
+
+    private ArrayAdapter<String> adapter;
+
+    private ArrayList<ListObject> auditoriums;
+    private ArrayList<ListObject> groups;
+    private ArrayList<ListObject> teachers;
+
+    private ArrayList<ListObject> filteredAuditoriums;
+    private ArrayList<ListObject> filteredGroups;
+    private ArrayList<ListObject> filteredTeachers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
+        filteredTeachers = new ArrayList<ListObject>();
+
         listView = (ListView) findViewById(R.id.lvContent);
-
-        adapter = new ArrayAdapter<> (
-                MainActivity.this,
-                android.R.layout.simple_list_item_1);
-        listView.setAdapter(adapter);
-
         setupTabBar();
 
-        new ParseAuditoriumsGroupsTeachers().execute();
-        reloadData();
+//        new ParseAuditoriumsGroupsTeachers().execute();
+        readDataFromSharedPreferences();
+        reloadDataInListView();
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                Log.d(TAG, "itemClick: position = " + position + ", id = " + id);
+            }
+        });
     }
 
     @Override
@@ -75,8 +91,9 @@ public class MainActivity extends TabActivity {
 
                 @Override
                 public boolean onQueryTextChange(String newText) {
-                    Log.d(TAG, "Query: " + newText);
-                    adapter.getFilter().filter(newText);
+                    searchQuery = newText;
+                    filterDataWithQuery(searchQuery);
+
                     return false;
                 }
             });
@@ -121,33 +138,92 @@ public class MainActivity extends TabActivity {
         // обработчик переключения вкладок
         tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
             public void onTabChanged(String tabId) {
-                reloadData();
+                filterDataWithQuery(searchQuery);
+                reloadDataInListView();
                 new ParseAuditoriumsGroupsTeachers().execute();
             }
         });
     }
 
-    private void reloadData() {
-        Log.d(TAG, "Reload data");
+    private void filterDataWithQuery(String query) {
+        if (query == null || query == "") {
+            filteredAuditoriums = auditoriums;
+            filteredGroups = groups;
+            filteredTeachers = teachers;
+            return;
+        }
+
+        // Filter Auditoriums, Groups and Teachers
+        filteredAuditoriums = filterArrayListWithQuery(auditoriums, query);
+        filteredGroups = filterArrayListWithQuery(groups, query);
+        filteredTeachers = filterArrayListWithQuery(teachers, query);
+    }
+
+    private ArrayList<ListObject> filterArrayListWithQuery(ArrayList<ListObject> array, String query) {
+        ArrayList<ListObject> filteredArray = new ArrayList<ListObject>();
+        for (ListObject record: array) {
+            if (record.title.toLowerCase().contains(query.toLowerCase())) {
+                filteredArray.add(record);
+            }
+        }
+        return filteredArray;
+    }
+
+    private void readDataFromSharedPreferences() {
         sharedPreferences = getPreferences(MODE_PRIVATE);
+        if (sharedPreferences.contains(AUDITORIUMS_KEY)) {
+            String fetchResult = sharedPreferences.getString(AUDITORIUMS_KEY, "");
+            auditoriums = parseStringToArrayList(fetchResult);
+        }
+        if (sharedPreferences.contains(GROUPS_KEY)) {
+            String fetchResult = sharedPreferences.getString(GROUPS_KEY, "");
+            groups = parseStringToArrayList(fetchResult);
+        }
+        if (sharedPreferences.contains(TEACHERS_KEY)) {
+            String fetchResult = sharedPreferences.getString(TEACHERS_KEY, "");
+            teachers = parseStringToArrayList(fetchResult);
+        }
+    }
+
+    private ArrayList<ListObject> parseStringToArrayList(String stringToParse) {
+        Type itemsListType = new TypeToken<List<ListObject>>(){}.getType();
+        ArrayList<ListObject> records = new Gson().fromJson(stringToParse, itemsListType);
+        return records;
+    }
+
+    private void reloadDataInListView() {
         String tabTag = tabHost.getCurrentTabTag();
-        Log.d(TAG, "Tab tag: " + tabTag);
         if (sharedPreferences.contains(tabTag)) {
             String fetchResult = sharedPreferences.getString(tabTag, "");
-            Log.d(TAG, fetchResult);
             Type itemsListType = new TypeToken<List<ListObject>>(){}.getType();
             List<ListObject> records = new Gson().fromJson(fetchResult, itemsListType);
 
             // Prepare list of Whatever names
-            ArrayList<String> recordNames = new ArrayList<String>();
+            ArrayList<String>recordNames = new ArrayList<String>();
             for (ListObject record: records) {
-                if (record.title.trim().length() > 1) {
-                    recordNames.add(record.title);
-                }
+                recordNames.add(record.title);
             }
 
             ArrayAdapter<String> listObjectsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, recordNames);
             listView.setAdapter(listObjectsAdapter);
+
+            adapter = new ArrayAdapter<> (
+                    this,
+                    android.R.layout.simple_list_item_1,recordNames);
+            listView.setAdapter(adapter);
+
+        }
+    }
+
+    private void setAdapterByContent() {
+
+//        String tabTag = tabHost.getCurrentTabTag();
+//        if (sharedPreferences.contains(tabTag)) {
+//            String fetchResult = sharedPreferences.getString(tabTag, "");
+
+        if (tabHost = "auditoriums") {
+            ArrayAdapter<String> auditoriumsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, filteredAuditoriums);
+            listView.setAdapter(auditoriumsAdapter);
         }
     }
 
@@ -167,6 +243,7 @@ public class MainActivity extends TabActivity {
                 String serializedGroups = parseListObjects(groups);
                 String serializedTeachers = parseListObjects(teachers);
 
+
                 // Save lists of Auditoriums, Groups and Teachers to SharedPreferences
                 sharedPreferences = getPreferences(MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -174,6 +251,8 @@ public class MainActivity extends TabActivity {
                 editor.putString(GROUPS_KEY, serializedGroups);
                 editor.putString(TEACHERS_KEY, serializedTeachers);
                 editor.commit();
+
+                readDataFromSharedPreferences();
 
                 return true;
 
@@ -186,17 +265,23 @@ public class MainActivity extends TabActivity {
 
         @Override
         protected void onPostExecute(Boolean result) {
-            reloadData();
+            filterDataWithQuery(searchQuery);
+
         }
+
 
         private String parseListObjects(Element element) {
             // Loops through options of HTML select element and map entries to ListObjects
             ArrayList<ListObject> records = new ArrayList<ListObject>();
             for (Element option: element.children()) {
-                ListObject newObject = new ListObject();
-                newObject.id = option.attr("value");
-                newObject.title = option.text();
-                records.add(newObject);
+                // Validate title on import
+                String title = option.text().trim();
+                if (title.length() >= 1) {
+                    ListObject newObject = new ListObject();
+                    newObject.id = option.attr("value");
+                    newObject.title = title;
+                    records.add(newObject);
+                }
             }
 
             // Serialize ArrayList<ListObject> to string

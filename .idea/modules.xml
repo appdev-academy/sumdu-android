@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SumDUShedule/SumDUShedule.iml" filepath="$PROJECT_DIR$/SumDUShedule/SumDUShedule.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SumDUSchedule/SumDUSchedule.iml" filepath="$PROJECT_DIR$/SumDUSchedule/SumDUSchedule.iml" />
       <module fileurl="file://$PROJECT_DIR$/SumDUSheduleAndroid.iml" filepath="$PROJECT_DIR$/SumDUSheduleAndroid.iml" />
     </modules>
   </component>
