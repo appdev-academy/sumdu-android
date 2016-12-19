@@ -1,6 +1,7 @@
 package igor.contentparce;
 
 import android.app.TabActivity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -27,6 +28,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import static android.content.Context.MODE_PRIVATE;
+
 public class MainActivity extends TabActivity {
 
     String TAG = "MainActivity";
@@ -42,6 +45,7 @@ public class MainActivity extends TabActivity {
     private String searchQuery = "";
 
     private ArrayAdapter<String> adapter;
+    private ArrayAdapter<ListObject> contentAdapter;
 
     private ArrayList<ListObject> auditoriums;
     private ArrayList<ListObject> groups;
@@ -56,14 +60,13 @@ public class MainActivity extends TabActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        filteredTeachers = new ArrayList<ListObject>();
-
         listView = (ListView) findViewById(R.id.lvContent);
         setupTabBar();
 
-//        new ParseAuditoriumsGroupsTeachers().execute();
+        new ParseAuditoriumsGroupsTeachers().execute();
         readDataFromSharedPreferences();
-        reloadDataInListView();
+        filterDataWithQuery(searchQuery);
+        setAdapterByContent();
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view,
@@ -78,7 +81,7 @@ public class MainActivity extends TabActivity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.search, menu);
         MenuItem item = menu.findItem(R.id.menu_search);
-        searchView = (SearchView)item.getActionView();
+        searchView = (SearchView) item.getActionView();
 
         if (searchView == null) {
             Log.d(TAG, "Search view is null");
@@ -109,7 +112,7 @@ public class MainActivity extends TabActivity {
         TabHost.TabSpec tabSpec;
 
         tabSpec = tabHost.newTabSpec("history");
-        tabSpec.setIndicator("" ,getResources().getDrawable(R.drawable.tab_icon_selector));
+        tabSpec.setIndicator("", getResources().getDrawable(R.drawable.tab_icon_selector));
         tabSpec.setContent(R.id.lvContent);
         tabHost.addTab(tabSpec);
 
@@ -132,14 +135,14 @@ public class MainActivity extends TabActivity {
         tabSpec.setContent(R.id.lvContent);
         tabHost.addTab(tabSpec);
 
-        // первая вкладка будет выбрана по умолчанию
-        tabHost.setCurrentTabByTag("groups");
+        // This tab will be chosen as default
+        tabHost.setCurrentTabByTag("history");
 
         // обработчик переключения вкладок
         tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
             public void onTabChanged(String tabId) {
                 filterDataWithQuery(searchQuery);
-                reloadDataInListView();
+                setAdapterByContent();
                 new ParseAuditoriumsGroupsTeachers().execute();
             }
         });
@@ -150,18 +153,20 @@ public class MainActivity extends TabActivity {
             filteredAuditoriums = auditoriums;
             filteredGroups = groups;
             filteredTeachers = teachers;
+            setAdapterByContent();
             return;
-        }
+        } else
 
-        // Filter Auditoriums, Groups and Teachers
-        filteredAuditoriums = filterArrayListWithQuery(auditoriums, query);
+            // Filter Auditoriums, Groups and Teachers
+            filteredAuditoriums = filterArrayListWithQuery(auditoriums, query);
         filteredGroups = filterArrayListWithQuery(groups, query);
         filteredTeachers = filterArrayListWithQuery(teachers, query);
+        setAdapterByContent();
     }
 
     private ArrayList<ListObject> filterArrayListWithQuery(ArrayList<ListObject> array, String query) {
         ArrayList<ListObject> filteredArray = new ArrayList<ListObject>();
-        for (ListObject record: array) {
+        for (ListObject record : array) {
             if (record.title.toLowerCase().contains(query.toLowerCase())) {
                 filteredArray.add(record);
             }
@@ -174,58 +179,50 @@ public class MainActivity extends TabActivity {
         if (sharedPreferences.contains(AUDITORIUMS_KEY)) {
             String fetchResult = sharedPreferences.getString(AUDITORIUMS_KEY, "");
             auditoriums = parseStringToArrayList(fetchResult);
+        } else {
+            auditoriums = new ArrayList<ListObject>();
         }
         if (sharedPreferences.contains(GROUPS_KEY)) {
             String fetchResult = sharedPreferences.getString(GROUPS_KEY, "");
             groups = parseStringToArrayList(fetchResult);
+        } else {
+            groups = new ArrayList<ListObject>();
         }
         if (sharedPreferences.contains(TEACHERS_KEY)) {
             String fetchResult = sharedPreferences.getString(TEACHERS_KEY, "");
             teachers = parseStringToArrayList(fetchResult);
+        } else {
+            teachers = new ArrayList<ListObject>();
         }
     }
 
     private ArrayList<ListObject> parseStringToArrayList(String stringToParse) {
-        Type itemsListType = new TypeToken<List<ListObject>>(){}.getType();
+        Type itemsListType = new TypeToken<List<ListObject>>() {
+        }.getType();
         ArrayList<ListObject> records = new Gson().fromJson(stringToParse, itemsListType);
         return records;
     }
 
-    private void reloadDataInListView() {
-        String tabTag = tabHost.getCurrentTabTag();
-        if (sharedPreferences.contains(tabTag)) {
-            String fetchResult = sharedPreferences.getString(tabTag, "");
-            Type itemsListType = new TypeToken<List<ListObject>>(){}.getType();
-            List<ListObject> records = new Gson().fromJson(fetchResult, itemsListType);
-
-            // Prepare list of Whatever names
-            ArrayList<String>recordNames = new ArrayList<String>();
-            for (ListObject record: records) {
-                recordNames.add(record.title);
-            }
-
-            ArrayAdapter<String> listObjectsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, recordNames);
-            listView.setAdapter(listObjectsAdapter);
-
-            adapter = new ArrayAdapter<> (
-                    this,
-                    android.R.layout.simple_list_item_1,recordNames);
-            listView.setAdapter(adapter);
-
-        }
-    }
-
     private void setAdapterByContent() {
+        Log.d(TAG, "0");
 
-//        String tabTag = tabHost.getCurrentTabTag();
-//        if (sharedPreferences.contains(tabTag)) {
-//            String fetchResult = sharedPreferences.getString(tabTag, "");
+        ListView listView = (ListView)findViewById(R.id.lvContent);
 
-        if (tabHost = "auditoriums") {
-            ArrayAdapter<String> auditoriumsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, filteredAuditoriums);
-            listView.setAdapter(auditoriumsAdapter);
+        if (tabHost.getCurrentTabTag().equals("auditoriums")) {
+            ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<ListObject>(this, android.R.layout.simple_list_item_1, filteredAuditoriums);
+            listView.setAdapter(contentAdapter);
+            Log.d(TAG, "1");
+        } else if (tabHost.getCurrentTabTag().equals("groups")) {
+            ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<ListObject>(this, android.R.layout.simple_list_item_1, filteredGroups);
+            listView.setAdapter(contentAdapter);
+            Log.d(TAG, "2");
+        } else {
+            ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<ListObject>(this, android.R.layout.simple_list_item_1, filteredTeachers);
+            listView.setAdapter(contentAdapter);
+            Log.d(TAG, "3");
         }
     }
+
 
     class ParseAuditoriumsGroupsTeachers extends AsyncTask<Void, Void, Boolean> {
 
@@ -252,11 +249,9 @@ public class MainActivity extends TabActivity {
                 editor.putString(TEACHERS_KEY, serializedTeachers);
                 editor.commit();
 
-                readDataFromSharedPreferences();
-
                 return true;
 
-            } catch(IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
 
                 return false;
@@ -265,7 +260,9 @@ public class MainActivity extends TabActivity {
 
         @Override
         protected void onPostExecute(Boolean result) {
+            readDataFromSharedPreferences();
             filterDataWithQuery(searchQuery);
+            setAdapterByContent();
 
         }
 
@@ -273,10 +270,10 @@ public class MainActivity extends TabActivity {
         private String parseListObjects(Element element) {
             // Loops through options of HTML select element and map entries to ListObjects
             ArrayList<ListObject> records = new ArrayList<ListObject>();
-            for (Element option: element.children()) {
+            for (Element option : element.children()) {
                 // Validate title on import
                 String title = option.text().trim();
-                if (title.length() >= 1) {
+                if (title.length() > 1) {
                     ListObject newObject = new ListObject();
                     newObject.id = option.attr("value");
                     newObject.title = title;
