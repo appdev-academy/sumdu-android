@@ -26,6 +26,7 @@ import org.jsoup.nodes.Element;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static android.content.Context.MODE_PRIVATE;
@@ -47,6 +48,7 @@ public class MainActivity extends TabActivity {
     private ArrayAdapter<String> adapter;
     private ArrayAdapter<ListObject> contentAdapter;
 
+    private ArrayList<ListObject> history;
     private ArrayList<ListObject> auditoriums;
     private ArrayList<ListObject> groups;
     private ArrayList<ListObject> teachers;
@@ -194,6 +196,7 @@ public class MainActivity extends TabActivity {
         } else {
             teachers = new ArrayList<ListObject>();
         }
+        history = new ArrayList<ListObject>();
     }
 
     private ArrayList<ListObject> parseStringToArrayList(String stringToParse) {
@@ -204,25 +207,22 @@ public class MainActivity extends TabActivity {
     }
 
     private void setAdapterByContent() {
-        Log.d(TAG, "0");
-
         ListView listView = (ListView)findViewById(R.id.lvContent);
 
         if (tabHost.getCurrentTabTag().equals("auditoriums")) {
             ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<ListObject>(this, android.R.layout.simple_list_item_1, filteredAuditoriums);
             listView.setAdapter(contentAdapter);
-            Log.d(TAG, "1");
         } else if (tabHost.getCurrentTabTag().equals("groups")) {
             ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<ListObject>(this, android.R.layout.simple_list_item_1, filteredGroups);
             listView.setAdapter(contentAdapter);
-            Log.d(TAG, "2");
-        } else {
+        } else if (tabHost.getCurrentTabTag().equals("teachers")){
             ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<ListObject>(this, android.R.layout.simple_list_item_1, filteredTeachers);
             listView.setAdapter(contentAdapter);
-            Log.d(TAG, "3");
+        } else if (tabHost.getCurrentTabTag().equals("history")){
+            ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<ListObject>(this, android.R.layout.simple_list_item_1, history);
+            listView.setAdapter(contentAdapter);
         }
     }
-
 
     class ParseAuditoriumsGroupsTeachers extends AsyncTask<Void, Void, Boolean> {
 
@@ -280,6 +280,7 @@ public class MainActivity extends TabActivity {
                     records.add(newObject);
                 }
             }
+            Collections.sort(records, new ListObjectComparator());
 
             // Serialize ArrayList<ListObject> to string
             Gson gson = new Gson();
