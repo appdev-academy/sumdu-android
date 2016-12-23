@@ -1,7 +1,6 @@
 package igor.contentparce;
 
 import android.app.TabActivity;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -25,9 +24,12 @@ import org.jsoup.nodes.Element;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -224,6 +226,7 @@ public class MainActivity extends TabActivity {
         }
     }
 
+
     class ParseAuditoriumsGroupsTeachers extends AsyncTask<Void, Void, Boolean> {
 
         @Override
@@ -249,6 +252,7 @@ public class MainActivity extends TabActivity {
                 editor.putString(TEACHERS_KEY, serializedTeachers);
                 editor.commit();
 
+                DownloadSchedule();
                 return true;
 
             } catch (IOException e) {
@@ -266,6 +270,20 @@ public class MainActivity extends TabActivity {
 
         }
 
+        private void DownloadSchedule() {
+            try {
+                String out = new Scanner(new URL("http://schedule.sumdu.edu.ua/index/json?id_grp=300531").openStream(), "UTF-8").useDelimiter("\\A").next();
+                Log.d(TAG,"OUT:" + out);
+            }
+            catch (MalformedURLException e) {
+                e.printStackTrace();
+                Log.d(TAG,"MalformedURLException");
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+                Log.d(TAG,"IOException");
+            }
+        }
 
         private String parseListObjects(Element element) {
             // Loops through options of HTML select element and map entries to ListObjects
