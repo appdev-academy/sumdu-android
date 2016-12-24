@@ -1,7 +1,9 @@
 package igor.contentparce;
 
 import android.app.TabActivity;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,14 +26,13 @@ import org.jsoup.nodes.Element;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
-import java.util.Scanner;
-
-import static android.content.Context.MODE_PRIVATE;
 
 public class MainActivity extends TabActivity {
 
@@ -65,6 +66,7 @@ public class MainActivity extends TabActivity {
         setContentView(R.layout.main);
 
         listView = (ListView) findViewById(R.id.lvContent);
+        setOnItemClickListener();
         setupTabBar();
 
         new ParseAuditoriumsGroupsTeachers().execute();
@@ -72,12 +74,6 @@ public class MainActivity extends TabActivity {
         filterDataWithQuery(searchQuery);
         setAdapterByContent();
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                Log.d(TAG, "itemClick: position = " + position + ", id = " + id);
-            }
-        });
     }
 
     @Override
@@ -168,6 +164,71 @@ public class MainActivity extends TabActivity {
         setAdapterByContent();
     }
 
+    private void setOnItemClickListener () {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String contentID = "id_aud";
+                String chosenID = "";
+
+                if (tabHost.getCurrentTabTag().equals("auditoriums")) {
+                    try {
+                        ListObject auditoriums = filteredAuditoriums.get(position);
+                        contentID = "id_aud";
+                        chosenID = auditoriums.id;
+                    } catch (Exception e) {
+                    }
+                } else if (tabHost.getCurrentTabTag().equals("groups")) {
+                    try {
+                        ListObject group = filteredGroups.get(position);
+                        contentID = "id_grp";
+                        chosenID = group.id;
+                    } catch (Exception e) {
+                    }
+                } else if  (tabHost.getCurrentTabTag().equals("teachers")) {
+                    try {
+                        ListObject teachers = filteredTeachers.get(position);
+                        contentID = "id_fio";
+                        chosenID = teachers.id;
+                    } catch (Exception e) {
+                    }
+                }
+
+                // Get start date
+                Date startDate = new Date();
+
+                // Get end date = start date + 30 days
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(startDate);
+                calendar.add(Calendar.DATE, 30);
+                Date endDate = calendar.getTime();
+
+                String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
+                if (downloadURL != null) {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(downloadURL));
+                    startActivity(browserIntent);
+                }
+            }
+        });
+    }
+
+    private String dateToString(Date date) {
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
+        String dateString = dateFormatter.format(date);
+        return dateString;
+    }
+
+    private String scheduleURLFor(String contentID, String chosenID, Date startDate, Date endDate) {
+        Uri.Builder builder = new Uri.Builder();
+        builder.scheme("http")
+                .authority("schedule.sumdu.edu.ua")
+                .appendPath("index")
+                .appendPath("json")
+                .appendQueryParameter(contentID, chosenID)
+                .appendQueryParameter("date_beg", dateToString(startDate))
+                .appendQueryParameter("date_end", dateToString(endDate));
+        return builder.build().toString();
+    }
+
     private ArrayList<ListObject> filterArrayListWithQuery(ArrayList<ListObject> array, String query) {
         ArrayList<ListObject> filteredArray = new ArrayList<ListObject>();
         for (ListObject record : array) {
@@ -176,6 +237,7 @@ public class MainActivity extends TabActivity {
             }
         }
         return filteredArray;
+
     }
 
     private void readDataFromSharedPreferences() {
@@ -202,8 +264,7 @@ public class MainActivity extends TabActivity {
     }
 
     private ArrayList<ListObject> parseStringToArrayList(String stringToParse) {
-        Type itemsListType = new TypeToken<List<ListObject>>() {
-        }.getType();
+        Type itemsListType = new TypeToken<List<ListObject>>(){}.getType();
         ArrayList<ListObject> records = new Gson().fromJson(stringToParse, itemsListType);
         return records;
     }
@@ -225,7 +286,6 @@ public class MainActivity extends TabActivity {
             listView.setAdapter(contentAdapter);
         }
     }
-
 
     class ParseAuditoriumsGroupsTeachers extends AsyncTask<Void, Void, Boolean> {
 
@@ -252,7 +312,6 @@ public class MainActivity extends TabActivity {
                 editor.putString(TEACHERS_KEY, serializedTeachers);
                 editor.commit();
 
-                DownloadSchedule();
                 return true;
 
             } catch (IOException e) {
@@ -268,21 +327,6 @@ public class MainActivity extends TabActivity {
             filterDataWithQuery(searchQuery);
             setAdapterByContent();
 
-        }
-
-        private void DownloadSchedule() {
-            try {
-                String out = new Scanner(new URL("http://schedule.sumdu.edu.ua/index/json?id_grp=300531").openStream(), "UTF-8").useDelimiter("\\A").next();
-                Log.d(TAG,"OUT:" + out);
-            }
-            catch (MalformedURLException e) {
-                e.printStackTrace();
-                Log.d(TAG,"MalformedURLException");
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-                Log.d(TAG,"IOException");
-            }
         }
 
         private String parseListObjects(Element element) {
@@ -305,5 +349,6 @@ public class MainActivity extends TabActivity {
             String jsonString = gson.toJson(records);
             return jsonString;
         }
+
     }
 }
