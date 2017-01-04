@@ -26,12 +26,12 @@ import org.jsoup.nodes.Element;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends TabActivity {
@@ -39,23 +39,25 @@ public class MainActivity extends TabActivity {
     String TAG = "MainActivity";
 
     SharedPreferences sharedPreferences;
+
+    // Special keys for values
     final String GROUPS_KEY = "groups";
     final String TEACHERS_KEY = "teachers";
     final String AUDITORIUMS_KEY = "auditoriums";
+    final String HISTORY_KEY = "history";
 
     private SearchView searchView;
     private ListView listView;
     private TabHost tabHost;
     private String searchQuery = "";
 
-    private ArrayAdapter<String> adapter;
-    private ArrayAdapter<ListObject> contentAdapter;
-
+    // ArrayLists for getting from sharedPreferences unfiltered elements
     private ArrayList<ListObject> history;
     private ArrayList<ListObject> auditoriums;
     private ArrayList<ListObject> groups;
     private ArrayList<ListObject> teachers;
 
+    // ArrayLists for filtered with query elements
     private ArrayList<ListObject> filteredAuditoriums;
     private ArrayList<ListObject> filteredGroups;
     private ArrayList<ListObject> filteredTeachers;
@@ -74,8 +76,10 @@ public class MainActivity extends TabActivity {
         filterDataWithQuery(searchQuery);
         setAdapterByContent();
 
+
     }
 
+    // Adding and setting up SearchView
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -104,9 +108,10 @@ public class MainActivity extends TabActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    // Adding tab bar
     public void setupTabBar() {
         tabHost = (TabHost) findViewById(android.R.id.tabhost);
-        // инициализация
+        // initialization
         tabHost.setup();
 
         TabHost.TabSpec tabSpec;
@@ -116,13 +121,13 @@ public class MainActivity extends TabActivity {
         tabSpec.setContent(R.id.lvContent);
         tabHost.addTab(tabSpec);
 
-        // создаем вкладку и указываем тег
+        // adding tab and defining tag
         tabSpec = tabHost.newTabSpec("teachers");
-        // название вкладки
+        // tab title
         tabSpec.setIndicator("Teachers");
-        // указываем id компонента из FrameLayout, он и станет содержимым
+        // specifying component id from FrameLayout to put as filling
         tabSpec.setContent(R.id.lvContent);
-        // добавляем в корневой элемент
+        // adding root element
         tabHost.addTab(tabSpec);
 
         tabSpec = tabHost.newTabSpec("groups");
@@ -136,9 +141,9 @@ public class MainActivity extends TabActivity {
         tabHost.addTab(tabSpec);
 
         // This tab will be chosen as default
-        tabHost.setCurrentTabByTag("history");
+        tabHost.setCurrentTabByTag("auditoriums");
 
-        // обработчик переключения вкладок
+        // handler of tab change
         tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
             public void onTabChanged(String tabId) {
                 filterDataWithQuery(searchQuery);
@@ -148,6 +153,7 @@ public class MainActivity extends TabActivity {
         });
     }
 
+    // Filtering data with entered query
     private void filterDataWithQuery(String query) {
         if (query == null || query == "") {
             filteredAuditoriums = auditoriums;
@@ -164,6 +170,7 @@ public class MainActivity extends TabActivity {
         setAdapterByContent();
     }
 
+    // OnItemClickListener for listView elements
     private void setOnItemClickListener () {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -175,18 +182,35 @@ public class MainActivity extends TabActivity {
                         ListObject auditoriums = filteredAuditoriums.get(position);
                         contentID = "id_aud";
                         chosenID = auditoriums.id;
+                        if (history.contains(auditoriums)) {
+                        } else
+                            saveHistoryToSharedPreferences(auditoriums.id, auditoriums.title);
+                        Log.d(TAG, "History:" + sharedPreferences.getString(HISTORY_KEY, ""));
                     } catch (Exception e) {
                     }
                 } else if (tabHost.getCurrentTabTag().equals("groups")) {
                     try {
-                        ListObject group = filteredGroups.get(position);
+                        ListObject groups = filteredGroups.get(position);
                         contentID = "id_grp";
-                        chosenID = group.id;
+                        chosenID = groups.id;
+                        if (history.contains(groups)) {
+                        } else
+                            saveHistoryToSharedPreferences(groups.id, groups.title);
                     } catch (Exception e) {
                     }
                 } else if  (tabHost.getCurrentTabTag().equals("teachers")) {
                     try {
                         ListObject teachers = filteredTeachers.get(position);
+                        contentID = "id_fio";
+                        chosenID = teachers.id;
+                        if (history.contains(teachers)) {
+                        } else
+                            saveHistoryToSharedPreferences(teachers.id, teachers.title);
+                    } catch (Exception e) {
+                    }
+                } else if (tabHost.getCurrentTabTag().equals("history"))     {
+                    try {
+                        ListObject teachers = history.get(position);
                         contentID = "id_fio";
                         chosenID = teachers.id;
                     } catch (Exception e) {
@@ -204,19 +228,21 @@ public class MainActivity extends TabActivity {
 
                 String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
                 if (downloadURL != null) {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(downloadURL));
-                    startActivity(browserIntent);
+//                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(downloadURL));
+//                    startActivity(browserIntent);
                 }
             }
         });
     }
 
+    // Setting up date
     private String dateToString(Date date) {
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
         String dateString = dateFormatter.format(date);
         return dateString;
     }
 
+    // Building up URL for server connection
     private String scheduleURLFor(String contentID, String chosenID, Date startDate, Date endDate) {
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("http")
@@ -229,6 +255,7 @@ public class MainActivity extends TabActivity {
         return builder.build().toString();
     }
 
+    // Performing comparison element with query and getting if it's similar
     private ArrayList<ListObject> filterArrayListWithQuery(ArrayList<ListObject> array, String query) {
         ArrayList<ListObject> filteredArray = new ArrayList<ListObject>();
         for (ListObject record : array) {
@@ -240,6 +267,7 @@ public class MainActivity extends TabActivity {
 
     }
 
+    // Reading data from shared preferences by special keys
     private void readDataFromSharedPreferences() {
         sharedPreferences = getPreferences(MODE_PRIVATE);
         if (sharedPreferences.contains(AUDITORIUMS_KEY)) {
@@ -260,15 +288,22 @@ public class MainActivity extends TabActivity {
         } else {
             teachers = new ArrayList<ListObject>();
         }
-        history = new ArrayList<ListObject>();
+        if (sharedPreferences.contains(HISTORY_KEY)) {
+            String fetchResult = sharedPreferences.getString(HISTORY_KEY, "");
+            history = parseStringToArrayList(fetchResult);
+        } else {
+            history = new ArrayList<ListObject>();
+        }
     }
 
+    // Parsing string Json to arrayList Gson
     private ArrayList<ListObject> parseStringToArrayList(String stringToParse) {
         Type itemsListType = new TypeToken<List<ListObject>>(){}.getType();
         ArrayList<ListObject> records = new Gson().fromJson(stringToParse, itemsListType);
         return records;
     }
 
+    // Setting adapter equal to content of selected tab
     private void setAdapterByContent() {
         ListView listView = (ListView)findViewById(R.id.lvContent);
 
@@ -287,6 +322,28 @@ public class MainActivity extends TabActivity {
         }
     }
 
+    // Saving elements added to history in sharedPreferences
+    private String saveHistoryToSharedPreferences (String historySaveID, String historySaveTitle) {
+
+        ArrayList<ListObject> historyRecords = new ArrayList<ListObject>();
+        ListObject historyObject = new ListObject();
+
+        historyObject.id = historySaveID;
+        historyObject.title = historySaveTitle;
+        historyRecords.add(historyObject);
+
+        Gson gson = new Gson();
+        String jsonHistoryString = gson.toJson(historyRecords);
+
+        sharedPreferences = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(HISTORY_KEY, jsonHistoryString);
+        editor.apply();
+
+        return jsonHistoryString;
+    }
+
+    // Parsing, serializing and saving content gained from server
     class ParseAuditoriumsGroupsTeachers extends AsyncTask<Void, Void, Boolean> {
 
         @Override
@@ -303,14 +360,13 @@ public class MainActivity extends TabActivity {
                 String serializedGroups = parseListObjects(groups);
                 String serializedTeachers = parseListObjects(teachers);
 
-
                 // Save lists of Auditoriums, Groups and Teachers to SharedPreferences
                 sharedPreferences = getPreferences(MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString(AUDITORIUMS_KEY, serializedAuditoriums);
                 editor.putString(GROUPS_KEY, serializedGroups);
                 editor.putString(TEACHERS_KEY, serializedTeachers);
-                editor.commit();
+                editor.apply();
 
                 return true;
 
@@ -329,6 +385,7 @@ public class MainActivity extends TabActivity {
 
         }
 
+        // Validating then adding elements; serializing ArrayList<ListObject> to string
         private String parseListObjects(Element element) {
             // Loops through options of HTML select element and map entries to ListObjects
             ArrayList<ListObject> records = new ArrayList<ListObject>();
