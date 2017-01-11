@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -31,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends TabActivity {
@@ -39,6 +39,9 @@ public class MainActivity extends TabActivity {
     String TAG = "MainActivity";
 
     SharedPreferences sharedPreferences;
+
+    // Static variable for history cleaning
+    final int CLEAN = 1;
 
     // Special keys for values
     final String GROUPS_KEY = "groups";
@@ -58,6 +61,7 @@ public class MainActivity extends TabActivity {
     private ArrayList<ListObject> teachers;
 
     // ArrayLists for filtered with query elements
+    private ArrayList<ListObject> filteredHistory;
     private ArrayList<ListObject> filteredAuditoriums;
     private ArrayList<ListObject> filteredGroups;
     private ArrayList<ListObject> filteredTeachers;
@@ -68,6 +72,7 @@ public class MainActivity extends TabActivity {
         setContentView(R.layout.main);
 
         listView = (ListView) findViewById(R.id.lvContent);
+        registerForContextMenu(listView);
         setOnItemClickListener();
         setupTabBar();
 
@@ -106,6 +111,31 @@ public class MainActivity extends TabActivity {
             });
         }
         return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+        if (tabHost.getCurrentTabTag().equals("history")) {
+            switch (view.getId()) {
+                case R.id.lvContent:
+                    menu.setHeaderTitle("History");
+                    menu.add(0, CLEAN, 0, "Очистить историю");
+                    break;
+            }
+        }
+    }
+
+    @Override
+    public boolean onContextItemSelected (MenuItem item){
+        switch (item.getItemId()) {
+            case CLEAN:
+                cleanHistoryInSharedPreferences();
+                new ParseAuditoriumsGroupsTeachers().execute();
+                setAdapterByContent();
+                break;
+        }
+
+        return super.onContextItemSelected(item);
     }
 
     // Adding tab bar
@@ -159,14 +189,16 @@ public class MainActivity extends TabActivity {
             filteredAuditoriums = auditoriums;
             filteredGroups = groups;
             filteredTeachers = teachers;
+            filteredHistory = history;
             setAdapterByContent();
             return;
         } else
 
-            // Filter Auditoriums, Groups and Teachers
+            // Filter Auditoriums, Groups, Teachers and History
             filteredAuditoriums = filterArrayListWithQuery(auditoriums, query);
         filteredGroups = filterArrayListWithQuery(groups, query);
         filteredTeachers = filterArrayListWithQuery(teachers, query);
+        filteredHistory = filterArrayListWithQuery(history, query);
         setAdapterByContent();
     }
 
@@ -180,39 +212,47 @@ public class MainActivity extends TabActivity {
                 if (tabHost.getCurrentTabTag().equals("auditoriums")) {
                     try {
                         ListObject auditoriums = filteredAuditoriums.get(position);
-                        contentID = "id_aud";
+                        auditoriums.objectType = "id_aud";
+                        contentID = auditoriums.objectType;
                         chosenID = auditoriums.id;
-                        if (history.contains(auditoriums)) {
-                        } else
-                            saveHistoryToSharedPreferences(auditoriums.id, auditoriums.title);
-                        Log.d(TAG, "History:" + sharedPreferences.getString(HISTORY_KEY, ""));
+                        contentActivity();
+                        if (!history.toString().contains(auditoriums.title)) {
+                            saveHistoryToSharedPreferences(auditoriums.id, auditoriums.title, auditoriums.objectType);
+                            Log.d(TAG, "History:" + sharedPreferences.getString(HISTORY_KEY, ""));
+                        }
                     } catch (Exception e) {
                     }
                 } else if (tabHost.getCurrentTabTag().equals("groups")) {
                     try {
                         ListObject groups = filteredGroups.get(position);
-                        contentID = "id_grp";
+                        groups.objectType = "id_grp";
+                        contentID = groups.objectType;
                         chosenID = groups.id;
-                        if (history.contains(groups)) {
-                        } else
-                            saveHistoryToSharedPreferences(groups.id, groups.title);
+                        contentActivity();
+                        if (!history.toString().contains(groups.title)) {
+                            saveHistoryToSharedPreferences(groups.id, groups.title, groups.objectType);
+                        }
                     } catch (Exception e) {
                     }
                 } else if  (tabHost.getCurrentTabTag().equals("teachers")) {
                     try {
                         ListObject teachers = filteredTeachers.get(position);
-                        contentID = "id_fio";
+                        teachers.objectType = "id_fio";
+                        contentID = teachers.objectType;
                         chosenID = teachers.id;
-                        if (history.contains(teachers)) {
-                        } else
-                            saveHistoryToSharedPreferences(teachers.id, teachers.title);
+                        contentActivity();
+                        if (!history.toString().contains(teachers.title)) {
+                            saveHistoryToSharedPreferences(teachers.id, teachers.title, teachers.objectType);
+                        }
                     } catch (Exception e) {
                     }
                 } else if (tabHost.getCurrentTabTag().equals("history"))     {
                     try {
-                        ListObject teachers = history.get(position);
-                        contentID = "id_fio";
-                        chosenID = teachers.id;
+                        ListObject history = filteredHistory.get(position);
+                        contentID = history.objectType;
+                        Log.d(TAG, "CONTENTID:" + contentID);
+                        chosenID = history.id;
+                        contentActivity();
                     } catch (Exception e) {
                     }
                 }
@@ -252,6 +292,7 @@ public class MainActivity extends TabActivity {
                 .appendQueryParameter(contentID, chosenID)
                 .appendQueryParameter("date_beg", dateToString(startDate))
                 .appendQueryParameter("date_end", dateToString(endDate));
+        Log.d(TAG, "builder: " + builder.build().toString());
         return builder.build().toString();
     }
 
@@ -317,30 +358,48 @@ public class MainActivity extends TabActivity {
             ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<ListObject>(this, android.R.layout.simple_list_item_1, filteredTeachers);
             listView.setAdapter(contentAdapter);
         } else if (tabHost.getCurrentTabTag().equals("history")){
-            ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<ListObject>(this, android.R.layout.simple_list_item_1, history);
+            ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<ListObject>(this, android.R.layout.simple_list_item_1, filteredHistory);
             listView.setAdapter(contentAdapter);
         }
     }
 
     // Saving elements added to history in sharedPreferences
-    private String saveHistoryToSharedPreferences (String historySaveID, String historySaveTitle) {
-
-        ArrayList<ListObject> historyRecords = new ArrayList<ListObject>();
-        ListObject historyObject = new ListObject();
-
-        historyObject.id = historySaveID;
-        historyObject.title = historySaveTitle;
-        historyRecords.add(historyObject);
+    private String saveHistoryToSharedPreferences (String historySaveID, String historySaveTitle, String  historySaveObjectType) {
 
         Gson gson = new Gson();
-        String jsonHistoryString = gson.toJson(historyRecords);
-
         sharedPreferences = getPreferences(MODE_PRIVATE);
+
+        ListObject historyObject = new ListObject();
+        historyObject.id = historySaveID;
+        historyObject.title = historySaveTitle;
+        historyObject.objectType = historySaveObjectType;
+        history.add(historyObject);
+
+        String jsonHistoryString = gson.toJson(history);
+
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(HISTORY_KEY, jsonHistoryString);
         editor.apply();
 
         return jsonHistoryString;
+    }
+
+
+
+    // Intent to new Activity
+    private void contentActivity () {
+        Intent intent = new Intent(this, ContentActivity.class);
+        startActivity(intent);
+    }
+
+    // Clean whole history in sharedPreferences
+    private void cleanHistoryInSharedPreferences() {
+        sharedPreferences = getPreferences(MODE_PRIVATE);
+        Log.d(TAG, "HISTORY_KEY" + sharedPreferences.getString(HISTORY_KEY, ""));
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove(HISTORY_KEY);
+        editor.apply();
+        Log.d(TAG, "HISTORY_KEY" + sharedPreferences.getString(HISTORY_KEY, ""));
     }
 
     // Parsing, serializing and saving content gained from server
