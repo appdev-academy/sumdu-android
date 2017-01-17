@@ -1,5 +1,6 @@
 package igor.contentparce;
 
+import android.app.ProgressDialog;
 import android.app.TabActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,10 +18,18 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TabHost;
+import android.widget.Toast;
 
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -53,6 +62,8 @@ public class MainActivity extends TabActivity {
     private ListView listView;
     private TabHost tabHost;
     private String searchQuery = "";
+    private String intentVariable;
+
 
     // ArrayLists for getting from sharedPreferences unfiltered elements
     private ArrayList<ListObject> history;
@@ -66,6 +77,7 @@ public class MainActivity extends TabActivity {
     private ArrayList<ListObject> filteredGroups;
     private ArrayList<ListObject> filteredTeachers;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,14 +86,12 @@ public class MainActivity extends TabActivity {
         listView = (ListView) findViewById(R.id.lvContent);
         registerForContextMenu(listView);
         setOnItemClickListener();
-        setupTabBar();
 
-        new ParseAuditoriumsGroupsTeachers().execute();
         readDataFromSharedPreferences();
+        new ParseAuditoriumsGroupsTeachers().execute();
+        setupTabBar();
         filterDataWithQuery(searchQuery);
         setAdapterByContent();
-
-
     }
 
     // Adding and setting up SearchView
@@ -173,6 +183,7 @@ public class MainActivity extends TabActivity {
         // This tab will be chosen as default
         tabHost.setCurrentTabByTag("auditoriums");
 
+
         // handler of tab change
         tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
             public void onTabChanged(String tabId) {
@@ -212,13 +223,13 @@ public class MainActivity extends TabActivity {
                 if (tabHost.getCurrentTabTag().equals("auditoriums")) {
                     try {
                         ListObject auditoriums = filteredAuditoriums.get(position);
+                        intentVariable = "auditoriums";
                         auditoriums.objectType = "id_aud";
                         contentID = auditoriums.objectType;
+                        intentVariable = contentID;
                         chosenID = auditoriums.id;
-                        contentActivity();
                         if (!history.toString().contains(auditoriums.title)) {
                             saveHistoryToSharedPreferences(auditoriums.id, auditoriums.title, auditoriums.objectType);
-                            Log.d(TAG, "History:" + sharedPreferences.getString(HISTORY_KEY, ""));
                         }
                     } catch (Exception e) {
                     }
@@ -227,8 +238,8 @@ public class MainActivity extends TabActivity {
                         ListObject groups = filteredGroups.get(position);
                         groups.objectType = "id_grp";
                         contentID = groups.objectType;
+                        intentVariable = contentID;
                         chosenID = groups.id;
-                        contentActivity();
                         if (!history.toString().contains(groups.title)) {
                             saveHistoryToSharedPreferences(groups.id, groups.title, groups.objectType);
                         }
@@ -239,8 +250,8 @@ public class MainActivity extends TabActivity {
                         ListObject teachers = filteredTeachers.get(position);
                         teachers.objectType = "id_fio";
                         contentID = teachers.objectType;
+                        intentVariable = contentID;
                         chosenID = teachers.id;
-                        contentActivity();
                         if (!history.toString().contains(teachers.title)) {
                             saveHistoryToSharedPreferences(teachers.id, teachers.title, teachers.objectType);
                         }
@@ -250,9 +261,8 @@ public class MainActivity extends TabActivity {
                     try {
                         ListObject history = filteredHistory.get(position);
                         contentID = history.objectType;
-                        Log.d(TAG, "CONTENTID:" + contentID);
+                        intentVariable = contentID;
                         chosenID = history.id;
-                        contentActivity();
                     } catch (Exception e) {
                     }
                 }
@@ -268,11 +278,19 @@ public class MainActivity extends TabActivity {
 
                 String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
                 if (downloadURL != null) {
-//                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(downloadURL));
-//                    startActivity(browserIntent);
+                   contentActivity(contentID, chosenID, startDate, endDate);
                 }
             }
         });
+    }
+
+    // Intent to new Activity
+    private void contentActivity (String contentID,String chosenID,Date startDate,Date endDate) {
+        String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
+        Intent intent = new Intent(this, ContentActivity.class);
+        intent.putExtra("downloadURL", downloadURL);
+        intent.putExtra("objectType", intentVariable);
+        startActivity(intent);
     }
 
     // Setting up date
@@ -292,7 +310,6 @@ public class MainActivity extends TabActivity {
                 .appendQueryParameter(contentID, chosenID)
                 .appendQueryParameter("date_beg", dateToString(startDate))
                 .appendQueryParameter("date_end", dateToString(endDate));
-        Log.d(TAG, "builder: " + builder.build().toString());
         return builder.build().toString();
     }
 
@@ -337,7 +354,7 @@ public class MainActivity extends TabActivity {
         }
     }
 
-    // Parsing string Json to arrayList Gson
+    // Parsing Json string to arrayList Gson
     private ArrayList<ListObject> parseStringToArrayList(String stringToParse) {
         Type itemsListType = new TypeToken<List<ListObject>>(){}.getType();
         ArrayList<ListObject> records = new Gson().fromJson(stringToParse, itemsListType);
@@ -349,16 +366,16 @@ public class MainActivity extends TabActivity {
         ListView listView = (ListView)findViewById(R.id.lvContent);
 
         if (tabHost.getCurrentTabTag().equals("auditoriums")) {
-            ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<ListObject>(this, android.R.layout.simple_list_item_1, filteredAuditoriums);
+            ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, filteredAuditoriums);
             listView.setAdapter(contentAdapter);
         } else if (tabHost.getCurrentTabTag().equals("groups")) {
-            ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<ListObject>(this, android.R.layout.simple_list_item_1, filteredGroups);
+            ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, filteredGroups);
             listView.setAdapter(contentAdapter);
         } else if (tabHost.getCurrentTabTag().equals("teachers")){
-            ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<ListObject>(this, android.R.layout.simple_list_item_1, filteredTeachers);
+            ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, filteredTeachers);
             listView.setAdapter(contentAdapter);
         } else if (tabHost.getCurrentTabTag().equals("history")){
-            ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<ListObject>(this, android.R.layout.simple_list_item_1, filteredHistory);
+            ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, filteredHistory);
             listView.setAdapter(contentAdapter);
         }
     }
@@ -382,14 +399,6 @@ public class MainActivity extends TabActivity {
         editor.apply();
 
         return jsonHistoryString;
-    }
-
-
-
-    // Intent to new Activity
-    private void contentActivity () {
-        Intent intent = new Intent(this, ContentActivity.class);
-        startActivity(intent);
     }
 
     // Clean whole history in sharedPreferences
