@@ -4,66 +4,38 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.appindexing.Thing;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.List;
 
 public class ContentActivity extends Activity {
 
     String TAG = "ContentActivity";
 
-    SharedPreferences sPreferences;
+    SharedPreferences sharedPreferencesContent;
 
-    final String NAME_WDAY_KEY = "NAME_WDAY";
-    final String NAME_PAIR_KEY = "NAME_PAIR";
-    final String TIME_PAIR_KEY = "TIME_PAIR";
-    final String NAME_FIO_KEY = "NAME_FIO";
-    final String NAME_AUD_KEY = "NAME_AUD";
-    final String NAME_GROUP_KEY = "NAME_GROUP";
+    private ListView contentListView;
 
+    private ArrayList<ListContentObject> content;
+
+    final String CONTENT_KEY = "CONTENT_KEY";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,13 +46,9 @@ public class ContentActivity extends Activity {
         actionBar.setDisplayHomeAsUpEnabled(true);
 
         new ParseTask().execute();
+        readDataFromSharedPreferences();
 
-
-        Intent intent = getIntent();
-        String objectType = intent.getStringExtra("objectType");
-
-
-//        setContentAdapter();
+        setContentAdapter();
 
     }
 
@@ -91,13 +59,37 @@ public class ContentActivity extends Activity {
 
     }
 
+    private void readDataFromSharedPreferences() {
+        sharedPreferencesContent = getPreferences(MODE_PRIVATE);
+        if (sharedPreferencesContent.contains(CONTENT_KEY)) {
+            String fetchResult = sharedPreferencesContent.getString(CONTENT_KEY, "");
+            content = parseStringToArrayList(fetchResult);
+            Log.d(TAG, "fetchResult1:" + fetchResult);
+        } else {
+            new ParseTask().execute();
+            String fetchResult = sharedPreferencesContent.getString(CONTENT_KEY, "");
+            content = parseStringToArrayList(fetchResult);
+            Log.d(TAG, "fetchResult2:" + fetchResult);
 
-//    private void setContentAdapter() {
-//        ListView contentListView = (ListView)findViewById(R.id.contentListView);
-//
-//        ArrayAdapter<ListObject> contentListViewAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, temp);
-//        contentListView.setAdapter(contentListViewAdapter);
-//    }
+        }
+    }
+
+    private ArrayList<ListContentObject> parseStringToArrayList(String stringToParse) {
+        Type itemsListType = new TypeToken<List<ListObject>>(){}.getType();
+        ArrayList<ListContentObject> contentRecords = new Gson().fromJson(stringToParse, itemsListType);
+        return contentRecords;
+    }
+
+    private void setContentAdapter() {
+        ListView contentListView = (ListView)findViewById(R.id.contentListView);
+
+        readDataFromSharedPreferences();
+
+        ArrayAdapter<ListContentObject> contentListViewAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, content);
+        contentListView.setAdapter(contentListViewAdapter);
+
+
+    }
 
     class ParseTask extends AsyncTask<Void, Void, String> {
 
@@ -137,6 +129,43 @@ public class ContentActivity extends Activity {
                 e.printStackTrace();
             }
 
+            sharedPreferencesContent = getPreferences(MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferencesContent.edit();
+            Log.d(TAG, "sharedPreferencesContent:" + sharedPreferencesContent.getString(CONTENT_KEY, ""));
+
+            try {
+                JSONArray jsonArray = new JSONArray(resultJson);
+                Log.d(TAG, "jsonArray:" + jsonArray);
+                ArrayList<ListContentObject> contentRecords = new ArrayList<ListContentObject>();
+
+                for (int i = 0; i < jsonArray.length(); i++)
+                {
+                    ListContentObject newContentObject = new ListContentObject();
+                    newContentObject.date = jsonArray.getJSONObject(i).getString("DATE_REG");
+                    newContentObject.dayOfTheWeek = jsonArray.getJSONObject(i).getString("NAME_WDAY");
+                    newContentObject.pair = jsonArray.getJSONObject(i).getString("NAME_PAIR");
+                    newContentObject.pairTime = jsonArray.getJSONObject(i).getString("TIME_PAIR");
+                    newContentObject.lecturer = jsonArray.getJSONObject(i).getString("NAME_FIO");
+                    newContentObject.auditorium = jsonArray.getJSONObject(i).getString("NAME_AUD");
+                    newContentObject.group = jsonArray.getJSONObject(i).getString("NAME_GROUP");
+                    newContentObject.pairType = jsonArray.getJSONObject(i).getString("NAME_STUD");
+                    newContentObject.pairTitle = jsonArray.getJSONObject(i).getString("ABBR_DISC");
+                    contentRecords.add(newContentObject);
+                }
+
+                Gson gson = new Gson();
+                String jsonContentString = gson.toJson(contentRecords);
+
+                editor.putString(CONTENT_KEY, jsonContentString);
+                editor.apply();
+                Log.d(TAG, "sharedPreferencesContent:" + sharedPreferencesContent.getString(CONTENT_KEY, ""));
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.d(TAG, "JSONException:");
+
+            }
+
             return resultJson;
         }
 
@@ -145,39 +174,8 @@ public class ContentActivity extends Activity {
         @Override
         protected void onPostExecute(String stringJson) {
             super.onPostExecute(stringJson);
-            Log.d(TAG, "strJson:" + stringJson);
-
-            sPreferences = getPreferences(MODE_PRIVATE);
-            SharedPreferences.Editor editor = sPreferences.edit();
-
-            try {
-
-            JSONArray jsonArray = new JSONArray(stringJson);
-            Log.d(TAG, "jsonArray:" + jsonArray);
-                ArrayList<ListObject> contentRecords = new ArrayList<ListObject>();
-
-                for (int i = 0; i < jsonArray.length(); i++)
-                {
-                    ListObject newContentObject = new ListObject();
-                    newContentObject.title = jsonArray.getJSONObject(i).getString("NAME_WDAY");;
-                    contentRecords.add(newContentObject);
-
-                }
-
-                Gson gson = new Gson();
-                String jsonContentString = gson.toJson(contentRecords);
-
-                editor.putString(NAME_WDAY_KEY, jsonContentString);
-                editor.apply();
-                Log.d(TAG, "sPreferences:" + sPreferences.getString(NAME_WDAY_KEY, ""));
 
 
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                Log.d(TAG, "JSONException:");
-
-            }
         }
     }
 
