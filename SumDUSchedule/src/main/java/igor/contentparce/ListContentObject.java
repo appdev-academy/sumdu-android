@@ -8,7 +8,7 @@ public class ListContentObject {
 
     public String dayOfTheWeek = "";
     public String date = "";
-    public String pair = "";
+    public String pairNumber = "";
     public String pairTime = "";
     public String lecturer = "";
     public String auditorium = "";
@@ -20,7 +20,7 @@ public class ListContentObject {
 
     @Override
     public String toString() {
-        return this.pair;
+        return this.pairTitle;
     }
 
 }

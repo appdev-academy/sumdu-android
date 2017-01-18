@@ -1,6 +1,5 @@
 package igor.contentparce;
 
-import android.app.ProgressDialog;
 import android.app.TabActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -20,16 +19,9 @@ import android.widget.SearchView;
 import android.widget.TabHost;
 import android.widget.Toast;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -62,8 +54,6 @@ public class MainActivity extends TabActivity {
     private ListView listView;
     private TabHost tabHost;
     private String searchQuery = "";
-    private String intentVariable;
-
 
     // ArrayLists for getting from sharedPreferences unfiltered elements
     private ArrayList<ListObject> history;
@@ -123,6 +113,7 @@ public class MainActivity extends TabActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    // Creating context menu for deleting history from shared preferences
     @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
         if (tabHost.getCurrentTabTag().equals("history")) {
@@ -223,10 +214,8 @@ public class MainActivity extends TabActivity {
                 if (tabHost.getCurrentTabTag().equals("auditoriums")) {
                     try {
                         ListObject auditoriums = filteredAuditoriums.get(position);
-                        intentVariable = "auditoriums";
                         auditoriums.objectType = "id_aud";
                         contentID = auditoriums.objectType;
-                        intentVariable = contentID;
                         chosenID = auditoriums.id;
                         if (!history.toString().contains(auditoriums.title)) {
                             saveHistoryToSharedPreferences(auditoriums.id, auditoriums.title, auditoriums.objectType);
@@ -238,7 +227,6 @@ public class MainActivity extends TabActivity {
                         ListObject groups = filteredGroups.get(position);
                         groups.objectType = "id_grp";
                         contentID = groups.objectType;
-                        intentVariable = contentID;
                         chosenID = groups.id;
                         if (!history.toString().contains(groups.title)) {
                             saveHistoryToSharedPreferences(groups.id, groups.title, groups.objectType);
@@ -250,7 +238,6 @@ public class MainActivity extends TabActivity {
                         ListObject teachers = filteredTeachers.get(position);
                         teachers.objectType = "id_fio";
                         contentID = teachers.objectType;
-                        intentVariable = contentID;
                         chosenID = teachers.id;
                         if (!history.toString().contains(teachers.title)) {
                             saveHistoryToSharedPreferences(teachers.id, teachers.title, teachers.objectType);
@@ -261,7 +248,6 @@ public class MainActivity extends TabActivity {
                     try {
                         ListObject history = filteredHistory.get(position);
                         contentID = history.objectType;
-                        intentVariable = contentID;
                         chosenID = history.id;
                     } catch (Exception e) {
                     }
@@ -289,7 +275,6 @@ public class MainActivity extends TabActivity {
         String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
         Intent intent = new Intent(this, ContentActivity.class);
         intent.putExtra("downloadURL", downloadURL);
-        intent.putExtra("objectType", intentVariable);
         startActivity(intent);
     }
 

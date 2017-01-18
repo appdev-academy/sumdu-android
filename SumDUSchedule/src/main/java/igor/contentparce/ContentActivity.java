@@ -45,10 +45,11 @@ public class ContentActivity extends Activity {
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 
+        setContentAdapter();
         new ParseTask().execute();
         readDataFromSharedPreferences();
 
-        setContentAdapter();
+
 
     }
 
@@ -61,21 +62,21 @@ public class ContentActivity extends Activity {
 
     private void readDataFromSharedPreferences() {
         sharedPreferencesContent = getPreferences(MODE_PRIVATE);
-        if (sharedPreferencesContent.contains(CONTENT_KEY)) {
-            String fetchResult = sharedPreferencesContent.getString(CONTENT_KEY, "");
-            content = parseStringToArrayList(fetchResult);
-            Log.d(TAG, "fetchResult1:" + fetchResult);
-        } else {
+//        if (sharedPreferencesContent.contains(CONTENT_KEY)) {
+//            String fetchResult = sharedPreferencesContent.getString(CONTENT_KEY, "");
+//            content = parseStringToArrayList(fetchResult);
+//            Log.d(TAG, "fetchResult1:" + fetchResult);
+//        } else {
             new ParseTask().execute();
             String fetchResult = sharedPreferencesContent.getString(CONTENT_KEY, "");
             content = parseStringToArrayList(fetchResult);
             Log.d(TAG, "fetchResult2:" + fetchResult);
 
-        }
+//        }
     }
 
     private ArrayList<ListContentObject> parseStringToArrayList(String stringToParse) {
-        Type itemsListType = new TypeToken<List<ListObject>>(){}.getType();
+        Type itemsListType = new TypeToken<List<ListContentObject>>(){}.getType();
         ArrayList<ListContentObject> contentRecords = new Gson().fromJson(stringToParse, itemsListType);
         return contentRecords;
     }
@@ -143,7 +144,7 @@ public class ContentActivity extends Activity {
                     ListContentObject newContentObject = new ListContentObject();
                     newContentObject.date = jsonArray.getJSONObject(i).getString("DATE_REG");
                     newContentObject.dayOfTheWeek = jsonArray.getJSONObject(i).getString("NAME_WDAY");
-                    newContentObject.pair = jsonArray.getJSONObject(i).getString("NAME_PAIR");
+                    newContentObject.pairNumber = jsonArray.getJSONObject(i).getString("NAME_PAIR");
                     newContentObject.pairTime = jsonArray.getJSONObject(i).getString("TIME_PAIR");
                     newContentObject.lecturer = jsonArray.getJSONObject(i).getString("NAME_FIO");
                     newContentObject.auditorium = jsonArray.getJSONObject(i).getString("NAME_AUD");
