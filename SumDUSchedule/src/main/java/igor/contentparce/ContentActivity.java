@@ -45,6 +45,11 @@ public class ContentActivity extends Activity {
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 
+        Intent intent = getIntent();
+
+        setTitle(intent.getStringExtra("content_title"));
+
+//        CustomAdapter customAdapter = new CustomAdapter();
         setContentAdapter();
         new ParseTask().execute();
         readDataFromSharedPreferences();

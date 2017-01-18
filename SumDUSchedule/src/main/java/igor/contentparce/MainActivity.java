@@ -54,6 +54,7 @@ public class MainActivity extends TabActivity {
     private ListView listView;
     private TabHost tabHost;
     private String searchQuery = "";
+    private String content_title = null;
 
     // ArrayLists for getting from sharedPreferences unfiltered elements
     private ArrayList<ListObject> history;
@@ -211,12 +212,14 @@ public class MainActivity extends TabActivity {
                 String contentID = "id_aud";
                 String chosenID = "";
 
+
                 if (tabHost.getCurrentTabTag().equals("auditoriums")) {
                     try {
                         ListObject auditoriums = filteredAuditoriums.get(position);
                         auditoriums.objectType = "id_aud";
                         contentID = auditoriums.objectType;
                         chosenID = auditoriums.id;
+                        content_title = auditoriums.title;
                         if (!history.toString().contains(auditoriums.title)) {
                             saveHistoryToSharedPreferences(auditoriums.id, auditoriums.title, auditoriums.objectType);
                         }
@@ -228,6 +231,7 @@ public class MainActivity extends TabActivity {
                         groups.objectType = "id_grp";
                         contentID = groups.objectType;
                         chosenID = groups.id;
+                        content_title = groups.title;
                         if (!history.toString().contains(groups.title)) {
                             saveHistoryToSharedPreferences(groups.id, groups.title, groups.objectType);
                         }
@@ -239,6 +243,7 @@ public class MainActivity extends TabActivity {
                         teachers.objectType = "id_fio";
                         contentID = teachers.objectType;
                         chosenID = teachers.id;
+                        content_title = teachers.title;
                         if (!history.toString().contains(teachers.title)) {
                             saveHistoryToSharedPreferences(teachers.id, teachers.title, teachers.objectType);
                         }
@@ -249,6 +254,7 @@ public class MainActivity extends TabActivity {
                         ListObject history = filteredHistory.get(position);
                         contentID = history.objectType;
                         chosenID = history.id;
+                        content_title = history.title;
                     } catch (Exception e) {
                     }
                 }
@@ -275,6 +281,7 @@ public class MainActivity extends TabActivity {
         String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
         Intent intent = new Intent(this, ContentActivity.class);
         intent.putExtra("downloadURL", downloadURL);
+        intent.putExtra("content_title", content_title);
         startActivity(intent);
     }
 
