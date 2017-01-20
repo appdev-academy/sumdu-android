@@ -17,7 +17,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TabHost;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -155,7 +154,7 @@ public class MainActivity extends TabActivity {
 
         // adding tab and defining tag
         tabSpec = tabHost.newTabSpec("teachers");
-        // tab title
+        // tab pairTitleAndType
         tabSpec.setIndicator("Teachers");
         // specifying component id from FrameLayout to put as filling
         tabSpec.setContent(R.id.lvContent);
@@ -270,14 +269,14 @@ public class MainActivity extends TabActivity {
 
                 String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
                 if (downloadURL != null) {
-                   contentActivity(contentID, chosenID, startDate, endDate);
+                   intentToContentActivity(contentID, chosenID, startDate, endDate);
                 }
             }
         });
     }
 
     // Intent to new Activity
-    private void contentActivity (String contentID,String chosenID,Date startDate,Date endDate) {
+    private void intentToContentActivity(String contentID, String chosenID, Date startDate, Date endDate) {
         String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
         Intent intent = new Intent(this, ContentActivity.class);
         intent.putExtra("downloadURL", downloadURL);
@@ -450,7 +449,7 @@ public class MainActivity extends TabActivity {
             // Loops through options of HTML select element and map entries to ListObjects
             ArrayList<ListObject> records = new ArrayList<ListObject>();
             for (Element option : element.children()) {
-                // Validate title on import
+                // Validate pairTitleAndType on import
                 String title = option.text().trim();
                 if (title.length() > 1) {
                     ListObject newObject = new ListObject();

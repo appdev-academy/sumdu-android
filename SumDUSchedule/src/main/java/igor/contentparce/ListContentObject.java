@@ -1,8 +1,5 @@
 package igor.contentparce;
 
-/**
- * Created by Igor on 1/18/17.
- */
 
 public class ListContentObject {
 
@@ -18,9 +15,9 @@ public class ListContentObject {
 
     ListContentObject() {}
 
-    @Override
-    public String toString() {
-        return this.pairTitle;
-    }
+//    @Override
+//    public String toString() {
+//        return this.pairTitle;
+//    }
 
 }

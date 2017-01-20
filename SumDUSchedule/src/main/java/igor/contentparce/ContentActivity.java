@@ -4,12 +4,17 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -34,29 +39,67 @@ public class ContentActivity extends Activity {
     private ListView contentListView;
 
     private ArrayList<ListContentObject> content;
+    private ArrayList<ListContentObject> output;
 
     final String CONTENT_KEY = "CONTENT_KEY";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_content);
+        setContentView(R.layout.custom_list_view);
 
+        // Setting actionBar with "Back" button
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 
+        // Getting pairTitleAndType from pressed element for using as activity pairTitleAndType
         Intent intent = getIntent();
-
         setTitle(intent.getStringExtra("content_title"));
 
-//        CustomAdapter customAdapter = new CustomAdapter();
-        setContentAdapter();
+
+
+//        ArrayList<SearchResults> searchResults = GetSearchResults();
+
+//        final ListView lv1 = (ListView) findViewById(R.id.ListView01);
+//        lv1.setAdapter(new CustomAdapter(this, searchResults));
+
+//        setContentAdapter();
         new ParseTask().execute();
         readDataFromSharedPreferences();
-
-
+        setContentListView();
 
     }
+
+//    private ArrayList<SearchResults> GetSearchResults(){
+//        ArrayList<SearchResults> results = new ArrayList<SearchResults>();
+//
+//
+//        SearchResults sr1 = new SearchResults();
+//        sr1.setName("output");
+//        sr1.setCityState("Dallas, TX");
+//        sr1.setPhone("214-555-1234");
+//        results.add(sr1);
+//
+//        sr1 = new SearchResults();
+//        sr1.setName("Jane Doe");
+//        sr1.setCityState("Atlanta, GA");
+//        sr1.setPhone("469-555-2587");
+//        results.add(sr1);
+//
+//        sr1 = new SearchResults();
+//        sr1.setName("Steve Young");
+//        sr1.setCityState("Miami, FL");
+//        sr1.setPhone("305-555-7895");
+//        results.add(sr1);
+//
+//        sr1 = new SearchResults();
+//        sr1.setName("Fred Jones");
+//        sr1.setCityState("Las Vegas, NV");
+//        sr1.setPhone("612-555-8214");
+//        results.add(sr1);
+//
+//        return results;
+//    }
 
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent myIntent = new Intent(getApplicationContext(), MainActivity.class);
@@ -75,7 +118,17 @@ public class ContentActivity extends Activity {
             new ParseTask().execute();
             String fetchResult = sharedPreferencesContent.getString(CONTENT_KEY, "");
             content = parseStringToArrayList(fetchResult);
-            Log.d(TAG, "fetchResult2:" + fetchResult);
+        Log.d(TAG, "CONTENT:" + content);
+
+
+//        String[] temp = new String[content.size()];
+//        int index = 0;
+//        for (Object value : content) {
+//            temp[index] = (String) value;
+//            index++;
+//        }
+//
+//        Log.d(TAG, "temp:" + temp);
 
 //        }
     }
@@ -84,6 +137,76 @@ public class ContentActivity extends Activity {
         Type itemsListType = new TypeToken<List<ListContentObject>>(){}.getType();
         ArrayList<ListContentObject> contentRecords = new Gson().fromJson(stringToParse, itemsListType);
         return contentRecords;
+    }
+
+    private void setContentListView() {
+
+//        String[] pairTitle = { "Пристр. цифр. електр. (лабораторна робота)", "Марья", "Петр", "Антон", "Даша", "Борис",
+//                "Костя", "Игорь", "Иван", "Марья", "Петр", "Антон" };;
+//        String[] pairTime = { "11:25 - 12:45", "Бухгалтер", "Программер",
+//                "Программер", "Бухгалтер", "Директор", "Программер", "Охранник", "Программер", "Бухгалтер", "Программер",
+//                "Программер" };
+//        String[] auditorium = { "ЕТ314", "Бухгалтер1", "Программер1",
+//                "Программер1", "Бухгалтер1", "Директор1", "Программер1", "Охранник1", "Программер1", "Бухгалтер1", "Программер1",
+//                "Программер1" };
+//        String[] lecturer = { "Дрозденко Олексій Олександрович", "Марья", "Петр", "Антон", "Даша", "Борис",
+//                "Костя", "Игорь", "Иван", "Марья", "Петр", "Антон" };
+
+
+        String[] pairTitle = new String[content.size()];
+        for(int i = 0; i < content.size(); i++){
+            pairTitle[i] = content.get(i).pairTitle;
+            i++;
+        }
+
+        String[] pairType = new String[content.size()];
+        for(int i = 0; i < content.size(); i++){
+            pairType[i] = content.get(i).pairType;
+            i++;
+        }
+
+        String[] pairTime = new String[content.size()];
+        for(int i = 0; i < content.size(); i++){
+            pairTime[i] = content.get(i).pairTime;
+            i++;
+        }
+
+        String[] auditorium = new String[content.size()];
+        for(int i = 0; i < content.size(); i++){
+            auditorium[i] = content.get(i).auditorium;
+            i++;
+        }
+
+        String[] lecturer = new String[content.size()];
+        for(int i = 0; i < content.size(); i++){
+            lecturer[i] = content.get(i).lecturer;
+            i++;
+        }
+
+
+        int[] colors = new int[2];
+
+        colors[0] = Color.parseColor("#559966CC");
+        colors[1] = Color.parseColor("#55336699");
+
+        LinearLayout linLayout = (LinearLayout) findViewById(R.id.linLayout);
+
+        LayoutInflater ltInflater = getLayoutInflater();
+
+        for (int i = 0; i < pairTitle.length; i++) {
+            Log.d("myLogs", "i = " + i);
+            View item = ltInflater.inflate(R.layout.item, linLayout, false);
+            TextView tvName = (TextView) item.findViewById(R.id.tvPairTitle_pairType);
+            tvName.setText(pairTitle[i] + "(" + pairType[i] + ")");
+            TextView tvPosition = (TextView) item.findViewById(R.id.tvPairTimeAndAuditorium);
+            tvPosition.setText(pairTime[i] + "  *  " + auditorium[i]);
+            TextView tvSalary = (TextView) item.findViewById(R.id.tvLecturer);
+            tvSalary.setText(String.valueOf(lecturer[i]));
+            item.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
+            item.setBackgroundColor(colors[i % 2]);
+            linLayout.addView(item);
+        }
+
     }
 
     private void setContentAdapter() {
@@ -141,7 +264,6 @@ public class ContentActivity extends Activity {
 
             try {
                 JSONArray jsonArray = new JSONArray(resultJson);
-                Log.d(TAG, "jsonArray:" + jsonArray);
                 ArrayList<ListContentObject> contentRecords = new ArrayList<ListContentObject>();
 
                 for (int i = 0; i < jsonArray.length(); i++)
