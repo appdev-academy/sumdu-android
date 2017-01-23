@@ -115,20 +115,11 @@ public class ContentActivity extends Activity {
 //            content = parseStringToArrayList(fetchResult);
 //            Log.d(TAG, "fetchResult1:" + fetchResult);
 //        } else {
-            new ParseTask().execute();
-            String fetchResult = sharedPreferencesContent.getString(CONTENT_KEY, "");
-            content = parseStringToArrayList(fetchResult);
+        new ParseTask().execute();
+        String fetchResult = sharedPreferencesContent.getString(CONTENT_KEY, "");
+        content = parseStringToArrayList(fetchResult);
         Log.d(TAG, "CONTENT:" + content);
 
-
-//        String[] temp = new String[content.size()];
-//        int index = 0;
-//        for (Object value : content) {
-//            temp[index] = (String) value;
-//            index++;
-//        }
-//
-//        Log.d(TAG, "temp:" + temp);
 
 //        }
     }
@@ -141,70 +132,126 @@ public class ContentActivity extends Activity {
 
     private void setContentListView() {
 
-//        String[] pairTitle = { "Пристр. цифр. електр. (лабораторна робота)", "Марья", "Петр", "Антон", "Даша", "Борис",
-//                "Костя", "Игорь", "Иван", "Марья", "Петр", "Антон" };;
-//        String[] pairTime = { "11:25 - 12:45", "Бухгалтер", "Программер",
-//                "Программер", "Бухгалтер", "Директор", "Программер", "Охранник", "Программер", "Бухгалтер", "Программер",
-//                "Программер" };
-//        String[] auditorium = { "ЕТ314", "Бухгалтер1", "Программер1",
-//                "Программер1", "Бухгалтер1", "Директор1", "Программер1", "Охранник1", "Программер1", "Бухгалтер1", "Программер1",
-//                "Программер1" };
-//        String[] lecturer = { "Дрозденко Олексій Олександрович", "Марья", "Петр", "Антон", "Даша", "Борис",
-//                "Костя", "Игорь", "Иван", "Марья", "Петр", "Антон" };
-
 
         String[] pairTitle = new String[content.size()];
         for(int i = 0; i < content.size(); i++){
-            pairTitle[i] = content.get(i).pairTitle;
-            i++;
+            if (content.get(i).pairTitle != null) {
+                pairTitle[i] = content.get(i).pairTitle;
+                i++;
+            }
         }
 
         String[] pairType = new String[content.size()];
         for(int i = 0; i < content.size(); i++){
-            pairType[i] = content.get(i).pairType;
-            i++;
+            if (content.get(i).pairType != null) {
+                pairType[i] = content.get(i).pairType;
+                i++;
+            }
         }
 
         String[] pairTime = new String[content.size()];
         for(int i = 0; i < content.size(); i++){
-            pairTime[i] = content.get(i).pairTime;
-            i++;
+            if (content.get(i).pairTime != null) {
+                pairTime[i] = content.get(i).pairTime;
+                i++;
+            }
         }
 
         String[] auditorium = new String[content.size()];
         for(int i = 0; i < content.size(); i++){
-            auditorium[i] = content.get(i).auditorium;
-            i++;
+            if (content.get(i).auditorium != null) {
+                auditorium[i] = content.get(i).auditorium;
+                i++;
+            }
         }
 
         String[] lecturer = new String[content.size()];
         for(int i = 0; i < content.size(); i++){
-            lecturer[i] = content.get(i).lecturer;
-            i++;
+            if (content.get(i).lecturer != null) {
+                lecturer[i] = content.get(i).lecturer;
+                i++;
+            }
         }
 
 
-        int[] colors = new int[2];
 
-        colors[0] = Color.parseColor("#559966CC");
-        colors[1] = Color.parseColor("#55336699");
+
+        String[] date = new String[content.size()];
+        for(int i = 0; i < content.size(); i++){
+            if (content.get(i).date != null) {
+                date[i] = content.get(i).date;
+                i++;
+            }
+        }
+
+//        String[] dayOfTheWeek = new String[content.size()];
+//        for(int i = 0; i < content.size(); i++){
+//            if (content.get(i).dayOfTheWeek != null) {
+//                dayOfTheWeek[i] = content.get(i).dayOfTheWeek;
+//                i++;
+//            }
+//        }
 
         LinearLayout linLayout = (LinearLayout) findViewById(R.id.linLayout);
 
         LayoutInflater ltInflater = getLayoutInflater();
 
-        for (int i = 0; i < pairTitle.length; i++) {
-            Log.d("myLogs", "i = " + i);
-            View item = ltInflater.inflate(R.layout.item, linLayout, false);
-            TextView tvName = (TextView) item.findViewById(R.id.tvPairTitle_pairType);
-            tvName.setText(pairTitle[i] + "(" + pairType[i] + ")");
-            TextView tvPosition = (TextView) item.findViewById(R.id.tvPairTimeAndAuditorium);
-            tvPosition.setText(pairTime[i] + "  *  " + auditorium[i]);
-            TextView tvSalary = (TextView) item.findViewById(R.id.tvLecturer);
-            tvSalary.setText(String.valueOf(lecturer[i]));
-            item.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
-            item.setBackgroundColor(colors[i % 2]);
-            linLayout.addView(item);
+
+        for (int i = 0; i < date.length; i++) {
+
+            View dayItem = ltInflater.inflate(R.layout.day, linLayout, false);
+            TextView tvDate = (TextView) dayItem.findViewById(R.id.tvDate);
+
+
+            String temp = date[i];
+
+            if (i == 0 && date[i] != null) {
+
+                tvDate.setText(date[i]);
+                Log.d(TAG, "[i] = " + i);
+                TextView tvDayOfTheWeek = (TextView) dayItem.findViewById(R.id.tvDayOfTheWeek);
+                tvDayOfTheWeek.setText(date[i]);
+                dayItem.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
+                dayItem.setBackgroundColor(0x749531DA);
+                linLayout.addView(dayItem);
+            } else
+
+            if (date[i-1] != null) {
+                temp = date[i-1];
+                Log.d(TAG, "temp:" + temp);
+                Log.d(TAG, "DATE[i]:" + date[i]);
+
+                if (date[i] != null && !date[i].equals(temp)) {
+
+//                temp = date[i];
+                tvDate.setText(date[i]);
+                Log.d(TAG, "DATE[i]" + date[i]);
+                TextView tvDayOfTheWeek = (TextView) dayItem.findViewById(R.id.tvDayOfTheWeek);
+                tvDayOfTheWeek.setText(date[i]);
+                dayItem.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
+                dayItem.setBackgroundColor(0x749531DA);
+                linLayout.addView(dayItem);
+            }
+            }
+            Log.d(TAG, "UDACHA");
+
+
+//                for (int e = 0; e < pairTitle.length; e++) {
+//
+//                        View item = ltInflater.inflate(R.layout.item, linLayout, false);
+//                        TextView tvPairTitleAndType = (TextView) item.findViewById(R.id.tvPairTitleAndPairType);
+//
+//                    if (pairTitle[e] != null) {
+//                        tvPairTitleAndType.setText(pairTitle[e] + " (" + pairType[e] + ")");
+//                        TextView tvPairTimeAndAuditorium = (TextView) item.findViewById(R.id.tvPairTimeAndAuditorium);
+//                        tvPairTimeAndAuditorium.setText(pairTime[e] + " *  " + auditorium[e]);
+//                        TextView tvLecturer = (TextView) item.findViewById(R.id.tvLecturer);
+//                        tvLecturer.setText(lecturer[e]);
+//                        item.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
+//                        item.setBackgroundColor(0x559966CC);
+//                        linLayout.addView(item);
+//                    }
+//                }
         }
 
     }
