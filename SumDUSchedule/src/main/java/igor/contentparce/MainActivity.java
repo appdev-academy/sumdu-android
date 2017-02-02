@@ -1,5 +1,6 @@
 package igor.contentparce;
 
+import android.app.ProgressDialog;
 import android.app.TabActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -66,6 +67,7 @@ public class MainActivity extends TabActivity {
     private ArrayList<ListObject> filteredAuditoriums;
     private ArrayList<ListObject> filteredGroups;
     private ArrayList<ListObject> filteredTeachers;
+
 
 
     @Override
@@ -172,7 +174,7 @@ public class MainActivity extends TabActivity {
         tabHost.addTab(tabSpec);
 
         // This tab will be chosen as default
-        tabHost.setCurrentTabByTag("auditoriums");
+        tabHost.setCurrentTabByTag("teachers");
 
 
         // handler of tab change
@@ -208,9 +210,8 @@ public class MainActivity extends TabActivity {
     private void setOnItemClickListener () {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String contentID = "id_aud";
+                String contentID = "";
                 String chosenID = "";
-
 
                 if (tabHost.getCurrentTabTag().equals("auditoriums")) {
                     try {
