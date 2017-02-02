@@ -57,7 +57,6 @@ public class ContentActivity extends Activity {
         setTitle(intent.getStringExtra("content_title"));
 
 
-
 //        ArrayList<SearchResults> searchResults = GetSearchResults();
 
 //        final ListView lv1 = (ListView) findViewById(R.id.ListView01);
@@ -175,22 +174,22 @@ public class ContentActivity extends Activity {
 
 
 
-
+        String[] dayOfTheWeek = new String[content.size()];
         String[] date = new String[content.size()];
         for(int i = 0; i < content.size(); i++){
-            if (content.get(i).date != null) {
+            if(content.get(i).date != null && i == 0) {
                 date[i] = content.get(i).date;
+                dayOfTheWeek[i] = content.get(i).dayOfTheWeek;
+                i++;
+            } else
+
+            if (content.get(i).date != null && !content.get(i).date.equals(content.get(i-1).date)) {
+                date[i] = content.get(i).date;
+                dayOfTheWeek[i] = content.get(i).dayOfTheWeek;
                 i++;
             }
         }
 
-//        String[] dayOfTheWeek = new String[content.size()];
-//        for(int i = 0; i < content.size(); i++){
-//            if (content.get(i).dayOfTheWeek != null) {
-//                dayOfTheWeek[i] = content.get(i).dayOfTheWeek;
-//                i++;
-//            }
-//        }
 
         LinearLayout linLayout = (LinearLayout) findViewById(R.id.linLayout);
 
@@ -202,40 +201,63 @@ public class ContentActivity extends Activity {
             View dayItem = ltInflater.inflate(R.layout.day, linLayout, false);
             TextView tvDate = (TextView) dayItem.findViewById(R.id.tvDate);
 
-
-            String temp = date[i];
-
-            if (i == 0 && date[i] != null) {
-
                 tvDate.setText(date[i]);
-                Log.d(TAG, "[i] = " + i);
                 TextView tvDayOfTheWeek = (TextView) dayItem.findViewById(R.id.tvDayOfTheWeek);
-                tvDayOfTheWeek.setText(date[i]);
+                tvDayOfTheWeek.setText(dayOfTheWeek[i]);
                 dayItem.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
                 dayItem.setBackgroundColor(0x749531DA);
                 linLayout.addView(dayItem);
-            } else
 
-            if (date[i-1] != null) {
-                temp = date[i-1];
-                Log.d(TAG, "temp:" + temp);
-                Log.d(TAG, "DATE[i]:" + date[i]);
+            if (content.get(i).date.equals(date[i]) && pairTitle[i] != null) {
 
-                if (date[i] != null && !date[i].equals(temp)) {
+                View item = ltInflater.inflate(R.layout.item, linLayout, false);
+                TextView tvPairTitleAndType = (TextView) item.findViewById(R.id.tvPairTitleAndPairType);
 
-//                temp = date[i];
-                tvDate.setText(date[i]);
-                Log.d(TAG, "DATE[i]" + date[i]);
-                TextView tvDayOfTheWeek = (TextView) dayItem.findViewById(R.id.tvDayOfTheWeek);
-                tvDayOfTheWeek.setText(date[i]);
-                dayItem.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
-                dayItem.setBackgroundColor(0x749531DA);
-                linLayout.addView(dayItem);
+
+                tvPairTitleAndType.setText(pairTitle[i] + " (" + pairType[i] + ")");
+                TextView tvPairTimeAndAuditorium = (TextView) item.findViewById(R.id.tvPairTimeAndAuditorium);
+                tvPairTimeAndAuditorium.setText(pairTime[i] + " *  " + auditorium[i]);
+                TextView tvLecturer = (TextView) item.findViewById(R.id.tvLecturer);
+                tvLecturer.setText(lecturer[i]);
+                item.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
+                item.setBackgroundColor(0x559966CC);
+                linLayout.addView(item);
+
             }
-            }
-            Log.d(TAG, "UDACHA");
+        }
 
 
+//        for (int i = 0; i < date.length; i++) {
+//
+//            View dayItem = ltInflater.inflate(R.layout.day, linLayout, false);
+//            TextView tvDate = (TextView) dayItem.findViewById(R.id.tvDate);
+//
+//
+//
+//            if (i == 0 && date[i] != null) {
+//
+//                tvDate.setText(date[i]);
+//                Log.d(TAG, "[i] = " + i);
+//                TextView tvDayOfTheWeek = (TextView) dayItem.findViewById(R.id.tvDayOfTheWeek);
+//                tvDayOfTheWeek.setText(dayOfTheWeek[i]);
+//                dayItem.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
+//                dayItem.setBackgroundColor(0x749531DA);
+//                linLayout.addView(dayItem);
+//            } else
+//
+//            if (date[i] != null) {
+//
+////                temp = date[i];
+//                tvDate.setText(date[i]);
+//                Log.d(TAG, "DATE[i]" + date[i]);
+//                TextView tvDayOfTheWeek = (TextView) dayItem.findViewById(R.id.tvDayOfTheWeek);
+//                tvDayOfTheWeek.setText(dayOfTheWeek[i]);
+//                dayItem.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
+//                dayItem.setBackgroundColor(0x749531DA);
+//                linLayout.addView(dayItem);
+//            }
+//
+//
 //                for (int e = 0; e < pairTitle.length; e++) {
 //
 //                        View item = ltInflater.inflate(R.layout.item, linLayout, false);
@@ -252,7 +274,7 @@ public class ContentActivity extends Activity {
 //                        linLayout.addView(item);
 //                    }
 //                }
-        }
+//        }
 
     }
 
