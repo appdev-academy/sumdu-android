@@ -29,6 +29,7 @@ import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ContentActivity extends Activity {
@@ -103,18 +104,18 @@ public class ContentActivity extends Activity {
     private ArrayList<ListContentObject> parseStringToArrayList(String stringToParse) {
         Type itemsListType = new TypeToken<List<ListContentObject>>(){}.getType();
         ArrayList<ListContentObject> contentRecords = new Gson().fromJson(stringToParse, itemsListType);
+        Collections.sort(contentRecords, new ListContentObjectComparator());
         return contentRecords;
     }
 
     private void setContentListView() {
-
 
         String[] pairTitle = new String[content.size()];
         for(int i = 0; i < content.size()-1; i++){
             if (content.get(i).pairTitle != null) {
                 pairTitle[i] = content.get(i).pairTitle;
                 i++;
-                Log.d(TAG, "PAIR_TITLE:" + content.get(i).pairTitle);
+//                Log.d(TAG, "PAIR_TITLE:" + content.get(i).pairTitle);
             }
         }
 
@@ -130,7 +131,7 @@ public class ContentActivity extends Activity {
         String[] pairTime = new String[content.size()];
         for(int i = 0; i < content.size()-1; i++){
             if (content.get(i).pairTime != null) {
-                pairTime[i] = content.get(i).pairTime;
+                pairTime[i] = content.get(i).pairTime.toString();
                 i++;
             }
         }
@@ -151,11 +152,14 @@ public class ContentActivity extends Activity {
             }
         }
 
+
+
         String[] dayOfTheWeek = new String[content.size()];
         String[] date = new String[content.size()];
         for(int i = 0; i < content.size()-1; i++){
             if(content.get(i).date != null && i == 0) {
                 date[i] = content.get(i).date;
+                Log.d(TAG, "DATE:" + date[i]);
                 dayOfTheWeek[i] = content.get(i).dayOfTheWeek;
                 i++;
             } else
@@ -163,10 +167,19 @@ public class ContentActivity extends Activity {
             if (content.get(i).date != null && !content.get(i).date.equals(content.get(i-1).date)) {
                 date[i] = content.get(i).date;
                 dayOfTheWeek[i] = content.get(i).dayOfTheWeek;
+                Log.d(TAG, "DATE:" + date[i]);
                 i++;
             }
         }
 
+        String[] dateMatch = new String[content.size()];
+        for(int i = 0; i < content.size()-1; i++){
+            if(content.get(i).date != null) {
+                dateMatch[i] = content.get(i).date;
+                Log.d(TAG, "DATE_MATCH:" + dateMatch[i]);
+                i++;
+            }
+        }
 
         LinearLayout linLayout = (LinearLayout) findViewById(R.id.linLayout);
 
@@ -178,27 +191,29 @@ public class ContentActivity extends Activity {
             View dayItem = ltInflater.inflate(R.layout.day, linLayout, false);
             TextView tvDate = (TextView) dayItem.findViewById(R.id.tvDate);
 
+            if (i == 0 || !content.get(i).date.equals(dateMatch[i])) {
+
                 tvDate.setText(date[i]);
                 TextView tvDayOfTheWeek = (TextView) dayItem.findViewById(R.id.tvDayOfTheWeek);
                 tvDayOfTheWeek.setText(dayOfTheWeek[i]);
                 dayItem.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
                 dayItem.setBackgroundColor(0x749531DA);
                 linLayout.addView(dayItem);
+            }
 
-            if (content.get(i).date.equals(date[i]) && pairTitle[i] != null) {
+                if (content.get(i).date.equals(dateMatch[i]) && pairTitle[i] != null) {
 
-                View item = ltInflater.inflate(R.layout.item, linLayout, false);
-                TextView tvPairTitleAndType = (TextView) item.findViewById(R.id.tvPairTitleAndPairType);
+                    View item = ltInflater.inflate(R.layout.item, linLayout, false);
+                    TextView tvPairTitleAndType = (TextView) item.findViewById(R.id.tvPairTitleAndPairType);
 
-
-                tvPairTitleAndType.setText(pairTitle[i] + " (" + pairType[i] + ")");
-                TextView tvPairTimeAndAuditorium = (TextView) item.findViewById(R.id.tvPairTimeAndAuditorium);
-                tvPairTimeAndAuditorium.setText(pairTime[i] + " *  " + auditorium[i]);
-                TextView tvLecturer = (TextView) item.findViewById(R.id.tvLecturer);
-                tvLecturer.setText(lecturer[i]);
-                item.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
-                item.setBackgroundColor(0x559966CC);
-                linLayout.addView(item);
+                    tvPairTitleAndType.setText(pairTitle[i] + " (" + pairType[i] + ")");
+                    TextView tvPairTimeAndAuditorium = (TextView) item.findViewById(R.id.tvPairTimeAndAuditorium);
+                    tvPairTimeAndAuditorium.setText(pairTime[i] + " *  " + auditorium[i]);
+                    TextView tvLecturer = (TextView) item.findViewById(R.id.tvLecturer);
+                    tvLecturer.setText(lecturer[i]);
+                    item.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
+                    item.setBackgroundColor(0x559966CC);
+                    linLayout.addView(item);
 
             }
         }
@@ -268,7 +283,6 @@ public class ContentActivity extends Activity {
                     ListContentObject newContentObject = new ListContentObject();
                     newContentObject.date = jsonArray.getJSONObject(i).getString("DATE_REG");
                     newContentObject.dayOfTheWeek = jsonArray.getJSONObject(i).getString("NAME_WDAY");
-                    newContentObject.pairNumber = jsonArray.getJSONObject(i).getString("NAME_PAIR");
                     newContentObject.pairTime = jsonArray.getJSONObject(i).getString("TIME_PAIR");
                     newContentObject.lecturer = jsonArray.getJSONObject(i).getString("NAME_FIO");
                     newContentObject.auditorium = jsonArray.getJSONObject(i).getString("NAME_AUD");
