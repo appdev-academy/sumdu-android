@@ -259,10 +259,10 @@ public class MainActivity extends TabActivity {
                     }
                 }
 
-                // Get start date
+                // Get start fullDate
                 Date startDate = new Date();
 
-                // Get end date = start date + 30 days
+                // Get end fullDate = start fullDate + 30 days
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(startDate);
                 calendar.add(Calendar.DATE, 30);
@@ -285,7 +285,7 @@ public class MainActivity extends TabActivity {
         startActivity(intent);
     }
 
-    // Setting up date
+    // Setting up fullDate
     private String dateToString(Date date) {
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
         String dateString = dateFormatter.format(date);

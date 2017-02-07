@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,6 +27,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -154,14 +154,14 @@ public class ContentActivity extends Activity {
         String[] dayOfTheWeek = new String[content.size()];
         String[] date = new String[content.size()];
         for(int i = 0; i < content.size()-1; i++){
-            if(content.get(i).date != null && i == 0) {
-                date[i] = content.get(i).date;
+            if(content.get(i).fullDate != null && i == 0) {
+                date[i] = content.get(i).fullDate;
                 Log.d(TAG, "DATE:" + date[i]);
                 dayOfTheWeek[i] = content.get(i).dayOfTheWeek;
             } else
 
-            if (content.get(i).date != null && !content.get(i).date.equals(content.get(i-1).date)) {
-                date[i] = content.get(i).date;
+            if (content.get(i).fullDate != null && !content.get(i).fullDate.equals(content.get(i-1).fullDate)) {
+                date[i] = content.get(i).fullDate;
                 dayOfTheWeek[i] = content.get(i).dayOfTheWeek;
                 Log.d(TAG, "DATE:" + date[i]);
             }
@@ -169,8 +169,8 @@ public class ContentActivity extends Activity {
 
         String[] dateMatch = new String[content.size()];
         for(int i = 0; i < content.size()-1; i++){
-            if(content.get(i).date != null) {
-                dateMatch[i] = content.get(i).date;
+            if(content.get(i).fullDate != null) {
+                dateMatch[i] = content.get(i).fullDate;
                 Log.d(TAG, "DATE_MATCH:" + dateMatch[i]);
             }
         }
@@ -194,7 +194,7 @@ public class ContentActivity extends Activity {
                 Log.d(TAG,"DATE  " + i);
             }
 
-                if (content.get(i).date.equals(dateMatch[i]) && pairTitle[i] != null) {
+                if (content.get(i).fullDate.equals(dateMatch[i]) && pairTitle[i] != null) {
 
                     View item = ltInflater.inflate(R.layout.item, linLayout, false);
                     TextView tvPairTitleAndType = (TextView) item.findViewById(R.id.tvPairTitleAndPairType);
@@ -269,13 +269,23 @@ public class ContentActivity extends Activity {
             try {
                 JSONArray jsonArray = new JSONArray(resultJson);
                 ArrayList<ListContentObject> contentRecords = new ArrayList<ListContentObject>();
+                SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy hh:mm");
+
 
                 for (int i = 0; i < jsonArray.length(); i++)
                 {
                     ListContentObject newContentObject = new ListContentObject();
-                    newContentObject.date = jsonArray.getJSONObject(i).getString("DATE_REG");
-                    newContentObject.dayOfTheWeek = jsonArray.getJSONObject(i).getString("NAME_WDAY");
                     newContentObject.pairTime = jsonArray.getJSONObject(i).getString("TIME_PAIR");
+
+                    char[] temp1 = new char[5];
+                    newContentObject.pairTime.getChars(0, 5, temp1, 0);
+                    String dateBuilder = jsonArray.getJSONObject(i).getString("DATE_REG") + " " + new String(temp1);
+                    Log.d(TAG, "dateBuilder:" + dateBuilder);
+
+                    newContentObject.fullDate = formatter.parse(dateBuilder);
+                    Log.d(TAG, "FULLDATE:" + newContentObject.fullDate);
+
+                    newContentObject.dayOfTheWeek = jsonArray.getJSONObject(i).getString("NAME_WDAY");
                     newContentObject.lecturer = jsonArray.getJSONObject(i).getString("NAME_FIO");
                     newContentObject.auditorium = jsonArray.getJSONObject(i).getString("NAME_AUD");
                     newContentObject.group = jsonArray.getJSONObject(i).getString("NAME_GROUP");

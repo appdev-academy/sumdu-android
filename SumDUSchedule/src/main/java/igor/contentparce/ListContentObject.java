@@ -7,7 +7,7 @@ import java.util.Date;
 public class ListContentObject {
 
     public String dayOfTheWeek = "";
-    public String date = "";
+    public String fullDate = "";
     public String pairTime = "";
     public String lecturer = "";
     public String auditorium = "";

@@ -21,8 +21,8 @@ public class ListContentObjectComparator implements Comparator<ListContentObject
         char[] temp2 = new char[5];
         object1.pairTime.getChars(0, 5, temp1, 0);
         object2.pairTime.getChars(0, 5, temp2, 0);
-        String dateBuilder1 = object1.date + " " + new String(temp1);
-        String dateBuilder2 = object2.date + " " + new String(temp2);
+        String dateBuilder1 = object1.fullDate + " " + new String(temp1);
+        String dateBuilder2 = object2.fullDate + " " + new String(temp2);
 
         try {
             Date date1 = formatter.parse(dateBuilder1);
