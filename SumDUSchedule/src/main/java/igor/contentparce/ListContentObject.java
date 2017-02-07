@@ -7,8 +7,8 @@ import java.util.Date;
 public class ListContentObject {
 
     public String dayOfTheWeek = "";
-    public String date;
-    public String pairTime;
+    public String date = "";
+    public String pairTime = "";
     public String lecturer = "";
     public String auditorium = "";
     public String group = "";
@@ -16,10 +16,5 @@ public class ListContentObject {
     public String pairTitle = "";
 
     ListContentObject() {}
-
-//    @Override
-//    public String toString() {
-//        return this.pairTitle;
-//    }
 
 }

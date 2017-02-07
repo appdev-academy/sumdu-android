@@ -98,6 +98,7 @@ public class ContentActivity extends Activity {
         progress = new ProgressDialog(this);
         progress.setTitle("Загрузка");
         progress.setMessage("Получение данных");
+        progress.setCanceledOnTouchOutside(false);
         progress.show();
     }
 
@@ -105,6 +106,7 @@ public class ContentActivity extends Activity {
         Type itemsListType = new TypeToken<List<ListContentObject>>(){}.getType();
         ArrayList<ListContentObject> contentRecords = new Gson().fromJson(stringToParse, itemsListType);
         Collections.sort(contentRecords, new ListContentObjectComparator());
+
         return contentRecords;
     }
 
@@ -114,7 +116,6 @@ public class ContentActivity extends Activity {
         for(int i = 0; i < content.size()-1; i++){
             if (content.get(i).pairTitle != null) {
                 pairTitle[i] = content.get(i).pairTitle;
-                i++;
 //                Log.d(TAG, "PAIR_TITLE:" + content.get(i).pairTitle);
             }
         }
@@ -124,15 +125,13 @@ public class ContentActivity extends Activity {
         for(int i = 0; i < content.size()-1; i++){
             if (content.get(i).pairType != null) {
                 pairType[i] = content.get(i).pairType;
-                i++;
             }
         }
 
         String[] pairTime = new String[content.size()];
         for(int i = 0; i < content.size()-1; i++){
             if (content.get(i).pairTime != null) {
-                pairTime[i] = content.get(i).pairTime.toString();
-                i++;
+                pairTime[i] = content.get(i).pairTime;
             }
         }
 
@@ -140,7 +139,6 @@ public class ContentActivity extends Activity {
         for(int i = 0; i < content.size()-1; i++){
             if (content.get(i).auditorium != null) {
                 auditorium[i] = content.get(i).auditorium;
-                i++;
             }
         }
 
@@ -148,7 +146,6 @@ public class ContentActivity extends Activity {
         for(int i = 0; i < content.size()-1; i++){
             if (content.get(i).lecturer != null) {
                 lecturer[i] = content.get(i).lecturer;
-                i++;
             }
         }
 
@@ -161,14 +158,12 @@ public class ContentActivity extends Activity {
                 date[i] = content.get(i).date;
                 Log.d(TAG, "DATE:" + date[i]);
                 dayOfTheWeek[i] = content.get(i).dayOfTheWeek;
-                i++;
             } else
 
             if (content.get(i).date != null && !content.get(i).date.equals(content.get(i-1).date)) {
                 date[i] = content.get(i).date;
                 dayOfTheWeek[i] = content.get(i).dayOfTheWeek;
                 Log.d(TAG, "DATE:" + date[i]);
-                i++;
             }
         }
 
@@ -177,21 +172,18 @@ public class ContentActivity extends Activity {
             if(content.get(i).date != null) {
                 dateMatch[i] = content.get(i).date;
                 Log.d(TAG, "DATE_MATCH:" + dateMatch[i]);
-                i++;
             }
         }
 
         LinearLayout linLayout = (LinearLayout) findViewById(R.id.linLayout);
-
         LayoutInflater ltInflater = getLayoutInflater();
-
 
         for (int i = 0; i < date.length; i++) {
 
             View dayItem = ltInflater.inflate(R.layout.day, linLayout, false);
             TextView tvDate = (TextView) dayItem.findViewById(R.id.tvDate);
 
-            if (i == 0 || !content.get(i).date.equals(dateMatch[i])) {
+            if (i == 0 || date[i] != null) {
 
                 tvDate.setText(date[i]);
                 TextView tvDayOfTheWeek = (TextView) dayItem.findViewById(R.id.tvDayOfTheWeek);
@@ -199,6 +191,7 @@ public class ContentActivity extends Activity {
                 dayItem.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
                 dayItem.setBackgroundColor(0x749531DA);
                 linLayout.addView(dayItem);
+                Log.d(TAG,"DATE  " + i);
             }
 
                 if (content.get(i).date.equals(dateMatch[i]) && pairTitle[i] != null) {
@@ -214,7 +207,7 @@ public class ContentActivity extends Activity {
                     item.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
                     item.setBackgroundColor(0x559966CC);
                     linLayout.addView(item);
-
+                    Log.d(TAG,"ITEM  " + i);
             }
         }
 
@@ -237,7 +230,6 @@ public class ContentActivity extends Activity {
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
         String resultJson = "";
-        String jsonString = "";
 
         @Override
         protected String doInBackground(Void... params) {
