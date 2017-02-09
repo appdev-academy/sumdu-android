@@ -174,8 +174,7 @@ public class MainActivity extends TabActivity {
         tabHost.addTab(tabSpec);
 
         // This tab will be chosen as default
-        tabHost.setCurrentTabByTag("teachers");
-
+        tabHost.setCurrentTabByTag("groups");
 
         // handler of tab change
         tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
@@ -202,7 +201,7 @@ public class MainActivity extends TabActivity {
             filteredAuditoriums = filterArrayListWithQuery(auditoriums, query);
         filteredGroups = filterArrayListWithQuery(groups, query);
         filteredTeachers = filterArrayListWithQuery(teachers, query);
-        filteredHistory = filterArrayListWithQuery(history, query);
+        filteredHistory =  filterArrayListWithQuery(history, query);
         setAdapterByContent();
     }
 
