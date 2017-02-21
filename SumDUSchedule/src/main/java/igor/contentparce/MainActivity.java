@@ -1,23 +1,29 @@
 package igor.contentparce;
 
-import android.app.ProgressDialog;
+import android.app.Fragment;
 import android.app.TabActivity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TabHost;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -28,6 +34,8 @@ import org.jsoup.nodes.Element;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -36,6 +44,7 @@ import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends TabActivity {
+// TabActivity
 
     String TAG = "MainActivity";
 
@@ -43,6 +52,8 @@ public class MainActivity extends TabActivity {
 
     // Static variable for history cleaning
     final int CLEAN = 1;
+
+    private int connectionStatus = 1;
 
     // Special keys for values
     final String GROUPS_KEY = "groups";
@@ -79,8 +90,12 @@ public class MainActivity extends TabActivity {
         registerForContextMenu(listView);
         setOnItemClickListener();
 
+        checkConnection();
+        if (connectionStatus != 0) {
+            new ParseAuditoriumsGroupsTeachers().execute();
+        }
+
         readDataFromSharedPreferences();
-        new ParseAuditoriumsGroupsTeachers().execute();
         setupTabBar();
         filterDataWithQuery(searchQuery);
         setAdapterByContent();
@@ -133,8 +148,11 @@ public class MainActivity extends TabActivity {
         switch (item.getItemId()) {
             case CLEAN:
                 cleanHistoryInSharedPreferences();
-                new ParseAuditoriumsGroupsTeachers().execute();
-                setAdapterByContent();
+                checkConnection();
+                if(connectionStatus != 0) {
+                    new ParseAuditoriumsGroupsTeachers().execute();
+                }
+                    setAdapterByContent();
                 break;
         }
 
@@ -157,21 +175,24 @@ public class MainActivity extends TabActivity {
         // adding tab and defining tag
         tabSpec = tabHost.newTabSpec("teachers");
         // tab pairTitleAndType
-        tabSpec.setIndicator("Teachers");
+        tabSpec.setIndicator("Викладач");
         // specifying component id from FrameLayout to put as filling
         tabSpec.setContent(R.id.lvContent);
         // adding root element
         tabHost.addTab(tabSpec);
 
         tabSpec = tabHost.newTabSpec("groups");
-        tabSpec.setIndicator("Groups");
+        tabSpec.setIndicator("Група");
         tabSpec.setContent(R.id.lvContent);
         tabHost.addTab(tabSpec);
 
         tabSpec = tabHost.newTabSpec("auditoriums");
-        tabSpec.setIndicator("Auditorium");
+        tabSpec.setIndicator("Аудиторія");
         tabSpec.setContent(R.id.lvContent);
         tabHost.addTab(tabSpec);
+
+        tabHost.getTabWidget().getChildAt(0).getLayoutParams().width = 5;
+
 
         // This tab will be chosen as default
         tabHost.setCurrentTabByTag("groups");
@@ -179,9 +200,13 @@ public class MainActivity extends TabActivity {
         // handler of tab change
         tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
             public void onTabChanged(String tabId) {
+
                 filterDataWithQuery(searchQuery);
                 setAdapterByContent();
-                new ParseAuditoriumsGroupsTeachers().execute();
+                checkConnection();
+                if(connectionStatus != 0) {
+                    new ParseAuditoriumsGroupsTeachers().execute();
+                }
             }
         });
     }
@@ -212,6 +237,8 @@ public class MainActivity extends TabActivity {
                 String contentID = "";
                 String chosenID = "";
 
+                checkConnection();
+
                 if (tabHost.getCurrentTabTag().equals("auditoriums")) {
                     try {
                         ListObject auditoriums = filteredAuditoriums.get(position);
@@ -219,7 +246,7 @@ public class MainActivity extends TabActivity {
                         contentID = auditoriums.objectType;
                         chosenID = auditoriums.id;
                         content_title = auditoriums.title;
-                        if (!history.toString().contains(auditoriums.title)) {
+                        if (!history.toString().contains(auditoriums.title) && connectionStatus != 0) {
                             saveHistoryToSharedPreferences(auditoriums.id, auditoriums.title, auditoriums.objectType);
                         }
                     } catch (Exception e) {
@@ -231,7 +258,7 @@ public class MainActivity extends TabActivity {
                         contentID = groups.objectType;
                         chosenID = groups.id;
                         content_title = groups.title;
-                        if (!history.toString().contains(groups.title)) {
+                        if (!history.toString().contains(groups.title) && connectionStatus != 0) {
                             saveHistoryToSharedPreferences(groups.id, groups.title, groups.objectType);
                         }
                     } catch (Exception e) {
@@ -243,7 +270,7 @@ public class MainActivity extends TabActivity {
                         contentID = teachers.objectType;
                         chosenID = teachers.id;
                         content_title = teachers.title;
-                        if (!history.toString().contains(teachers.title)) {
+                        if (!history.toString().contains(teachers.title) && connectionStatus != 0) {
                             saveHistoryToSharedPreferences(teachers.id, teachers.title, teachers.objectType);
                         }
                     } catch (Exception e) {
@@ -275,13 +302,70 @@ public class MainActivity extends TabActivity {
         });
     }
 
+    // Checking internet connection
+    public void checkConnection() {
+        // запускаем проверку в новом потоке
+        new Thread(new Runnable() {
+            @Override
+            public void run(){
+                if (checkInternet()) {
+                    connectionStatus = 1;
+                    Log.d(TAG, "Есть подключение");
+                } else {
+                    connectionStatus = 0;
+                    Log.d(TAG, "Нет подключения");
+                }
+            }
+        }).start();
+    }
+
+    // Main internet connection check method
+    public boolean checkInternet() {
+
+        ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        // проверка подключения
+        if (activeNetwork != null && activeNetwork.isConnected()) {
+            try {
+                // тест доступности внешнего ресурса
+                URL url = new URL("http://schedule.sumdu.edu.ua");
+                HttpURLConnection urlc = (HttpURLConnection)url.openConnection();
+                urlc.setRequestProperty("User-Agent", "test");
+                urlc.setRequestProperty("Connection", "close");
+                urlc.setConnectTimeout(1000); // Timeout в секундах
+                urlc.connect();
+                // статус ресурса OK
+                if (urlc.getResponseCode() == 200) {
+                    return true;
+                }
+                // иначе проверка провалилась
+                return false;
+
+            } catch (IOException e) {
+                Log.d(TAG, "Ошибка проверки подключения к интернету", e);
+                return false;
+            }
+        }
+
+        return false;
+    }
+
     // Intent to new Activity
     private void intentToContentActivity(String contentID, String chosenID, Date startDate, Date endDate) {
-        String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
-        Intent intent = new Intent(this, ContentActivity.class);
-        intent.putExtra("downloadURL", downloadURL);
-        intent.putExtra("content_title", content_title);
-        startActivity(intent);
+
+//        if (connectionStatus == 0 && tabHost.getCurrentTabTag().equals("history") || connectionStatus != 0) {
+            String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
+            Intent intent = new Intent(this, ContentActivity.class);
+            intent.putExtra("downloadURL", downloadURL);
+            intent.putExtra("content_title", content_title);
+            intent.putExtra("connectionStatus", connectionStatus);
+            startActivity(intent);
+            Log.d(TAG, "Status: " + "GO!");
+//        } else {
+//            Toast.makeText(getApplicationContext(),
+//                    "No connection to server. You only able to use items from History tab.", Toast.LENGTH_LONG).show();
+//        }
     }
 
     // Setting up fullDate
@@ -291,7 +375,7 @@ public class MainActivity extends TabActivity {
         return dateString;
     }
 
-    // Building up URL for server connection
+    // Building up URL for server connectionStatus
     private String scheduleURLFor(String contentID, String chosenID, Date startDate, Date endDate) {
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("http")
@@ -316,33 +400,80 @@ public class MainActivity extends TabActivity {
 
     }
 
-    // Reading data from shared preferences by special keys
+    // Reading data from shared preferences by special keys considering internet connection status
     private void readDataFromSharedPreferences() {
         sharedPreferences = getPreferences(MODE_PRIVATE);
-        if (sharedPreferences.contains(AUDITORIUMS_KEY)) {
+        if (sharedPreferences.contains(AUDITORIUMS_KEY) && connectionStatus == 1) {
             String fetchResult = sharedPreferences.getString(AUDITORIUMS_KEY, "");
             auditoriums = parseStringToArrayList(fetchResult);
+            Log.d(TAG, "1 case" );
+        } else
+
+        if (sharedPreferences.contains(AUDITORIUMS_KEY) && connectionStatus == 0) {
+            String fetchResult = sharedPreferences.getString(AUDITORIUMS_KEY, "");
+            String fetchCompareResult = sharedPreferences.getString(HISTORY_KEY, "");
+            ArrayList<ListObject> fetchResultListObject = parseStringToArrayList(fetchResult);
+            ArrayList<ListObject> fetchCompareResultListObject = parseStringToArrayList(fetchCompareResult);
+            auditoriums = compareLists(fetchCompareResultListObject, fetchResultListObject);
+            Log.d(TAG, "GROUPS: " + auditoriums );
         } else {
             auditoriums = new ArrayList<ListObject>();
         }
-        if (sharedPreferences.contains(GROUPS_KEY)) {
+
+        if (sharedPreferences.contains(GROUPS_KEY) && connectionStatus == 1) {
             String fetchResult = sharedPreferences.getString(GROUPS_KEY, "");
             groups = parseStringToArrayList(fetchResult);
-        } else {
+            Log.d(TAG, "1 case" );
+        } else
+
+            if (sharedPreferences.contains(GROUPS_KEY) && connectionStatus == 0) {
+            String fetchResult = sharedPreferences.getString(GROUPS_KEY, "");
+            String fetchCompareResult = sharedPreferences.getString(HISTORY_KEY, "");
+            ArrayList<ListObject> fetchResultListObject = parseStringToArrayList(fetchResult);
+            ArrayList<ListObject> fetchCompareResultListObject = parseStringToArrayList(fetchCompareResult);
+                groups = compareLists(fetchCompareResultListObject, fetchResultListObject);
+                Log.d(TAG, "GROUPS: " + groups );
+
+                } else {
             groups = new ArrayList<ListObject>();
         }
-        if (sharedPreferences.contains(TEACHERS_KEY)) {
+
+        if (sharedPreferences.contains(TEACHERS_KEY) && connectionStatus == 1) {
             String fetchResult = sharedPreferences.getString(TEACHERS_KEY, "");
             teachers = parseStringToArrayList(fetchResult);
+            Log.d(TAG, "1 case" );
+        } else
+
+        if (sharedPreferences.contains(TEACHERS_KEY) && connectionStatus == 0) {
+            String fetchResult = sharedPreferences.getString(TEACHERS_KEY, "");
+            String fetchCompareResult = sharedPreferences.getString(HISTORY_KEY, "");
+            ArrayList<ListObject> fetchResultListObject = parseStringToArrayList(fetchResult);
+            ArrayList<ListObject> fetchCompareResultListObject = parseStringToArrayList(fetchCompareResult);
+            teachers = compareLists(fetchCompareResultListObject, fetchResultListObject);
+            Log.d(TAG, "GROUPS: " + teachers );
         } else {
             teachers = new ArrayList<ListObject>();
         }
+
         if (sharedPreferences.contains(HISTORY_KEY)) {
             String fetchResult = sharedPreferences.getString(HISTORY_KEY, "");
             history = parseStringToArrayList(fetchResult);
         } else {
             history = new ArrayList<ListObject>();
         }
+    }
+
+    // Comparing objects saved in sharedpreferences and linked in history tab with with their native tabs for displaing there
+    public ArrayList<ListObject> compareLists(ArrayList<ListObject> prevList, ArrayList<ListObject> modelList) {
+        ArrayList<ListObject> temp = new ArrayList<ListObject>();
+        for (ListObject modelListdata : modelList) {
+                for (ListObject prevListdata : prevList) {
+                    if (prevListdata.getTitle().equals(modelListdata.getTitle())) {
+                        temp.add(prevListdata);
+                    }
+                }
+            }
+            return temp;
     }
 
     // Parsing Json string to arrayList Gson
@@ -387,6 +518,7 @@ public class MainActivity extends TabActivity {
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(HISTORY_KEY, jsonHistoryString);
+//        editor.putString(historySaveTitle, jsonHistoryString);
         editor.apply();
 
         return jsonHistoryString;

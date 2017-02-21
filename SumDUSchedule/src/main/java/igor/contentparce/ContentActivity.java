@@ -5,16 +5,17 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -49,6 +50,8 @@ public class ContentActivity extends Activity {
 
     final String CONTENT_KEY = "CONTENT_KEY";
 
+    private int connectionStatus;
+
     ProgressDialog progress;
 
 
@@ -66,17 +69,28 @@ public class ContentActivity extends Activity {
         // Getting title from pressed element for using as activity title
         Intent intent = getIntent();
         setTitle(intent.getStringExtra("content_title"));
+        connectionStatus = intent.getIntExtra("connectionStatus", connectionStatus);
+        Log.d(TAG, "CONNECTION" + connectionStatus);
+
+        if (connectionStatus == 0) {
+
+            readDataFromSharedPreferences();
+            setContentListView();
+            progress.dismiss();
+
+        } else {
+
+            Toast.makeText(getApplicationContext(),
+                    "Nice connection", Toast.LENGTH_LONG).show();
+            new ParseTask().execute();
+
+        }
 
 
-//        setContentAdapter();
-
-        new ParseTask().execute();
-//        readDataFromSharedPreferences();
-//        setContentListView();
 
     }
 
-
+    // Activating "Back" button
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent myIntent = new Intent(getApplicationContext(), MainActivity.class);
         startActivityForResult(myIntent, 0);
@@ -84,21 +98,17 @@ public class ContentActivity extends Activity {
 
     }
 
+    // Getting data from sharedpreferences by "content_title"
     private void readDataFromSharedPreferences() {
         sharedPreferencesContent = getPreferences(MODE_PRIVATE);
-//        if (sharedPreferencesContent.contains(CONTENT_KEY)) {
-//            String fetchResult = sharedPreferencesContent.getString(CONTENT_KEY, "");
-//            content = parseStringToArrayList(fetchResult);
-//            Log.d(TAG, "fetchResult1:" + fetchResult);
-//        } else {
-
-        String fetchResult = sharedPreferencesContent.getString(CONTENT_KEY, "");
+        Intent intent = getIntent();
+        String fetchResult = sharedPreferencesContent.getString(intent.getStringExtra("content_title"), "");
         content = parseStringToArrayList(fetchResult);
 
-//        }
     }
 
-    private void progressDialog() {
+    // Seting up and starting progress dialog
+    public void progressDialog() {
         progress = new ProgressDialog(this);
         progress.setTitle("Загрузка");
         progress.setMessage("Получение данных");
@@ -114,11 +124,11 @@ public class ContentActivity extends Activity {
         return contentRecords;
     }
 
+    // Setting listview considering to chosen element
     private void setContentListView() {
 
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
         SimpleDateFormat timeFormatter = new SimpleDateFormat("kk:mm");
-
 
         String[] pairTitle = new String[content.size()];
         for(int i = 0; i < content.size()-1; i++){
@@ -127,7 +137,6 @@ public class ContentActivity extends Activity {
 //                Log.d(TAG, "PAIR_TITLE:" + content.get(i).pairTitle);
             }
         }
-
 
         String[] pairType = new String[content.size()];
         for(int i = 0; i < content.size()-1; i++){
@@ -150,8 +159,6 @@ public class ContentActivity extends Activity {
                 } catch (ParseException e) {
                     Log.d(TAG, "ParseException");
                 }
-
-
             }
         }
 
@@ -169,21 +176,19 @@ public class ContentActivity extends Activity {
             }
         }
 
-
-
         String[] dayOfTheWeek = new String[content.size()];
         String[] date = new String[content.size()];
         for(int i = 0; i < content.size()-1; i++){
             if(dateFormatter.format(content.get(i).fullDate) != null && i == 0) {
                 date[i] = dateFormatter.format(content.get(i).fullDate);
-                Log.d(TAG, "DATE:" + date[i]);
+//                Log.d(TAG, "DATE:" + date[i]);
                 dayOfTheWeek[i] = content.get(i).dayOfTheWeek;
             } else
 
             if (dateFormatter.format(content.get(i).fullDate) != null && !dateFormatter.format(content.get(i).fullDate).equals(dateFormatter.format(content.get(i-1).fullDate))) {
                 date[i] = dateFormatter.format(content.get(i).fullDate);
                 dayOfTheWeek[i] = content.get(i).dayOfTheWeek;
-                Log.d(TAG, "DATE:" + date[i]);
+//                Log.d(TAG, "DATE:" + date[i]);
             }
         }
 
@@ -191,7 +196,7 @@ public class ContentActivity extends Activity {
         for(int i = 0; i < content.size()-1; i++){
             if(dateFormatter.format(content.get(i).fullDate) != null) {
                 dateMatch[i] = dateFormatter.format(content.get(i).fullDate);
-                Log.d(TAG, "DATE_MATCH:" + dateMatch[i]);
+//                Log.d(TAG, "DATE_MATCH:" + dateMatch[i]);
             }
         }
 
@@ -209,7 +214,7 @@ public class ContentActivity extends Activity {
                 TextView tvDayOfTheWeek = (TextView) dayItem.findViewById(R.id.tvDayOfTheWeek);
                 tvDayOfTheWeek.setText(dayOfTheWeek[i]);
                 dayItem.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
-                dayItem.setBackgroundColor(0x749531DA);
+                dayItem.setBackgroundColor(Color.LTGRAY);
                 linLayout.addView(dayItem);
             }
 
@@ -231,15 +236,14 @@ public class ContentActivity extends Activity {
                     TextView tvLecturer = (TextView) item.findViewById(R.id.tvLecturer);
                     tvLecturer.setText(lecturer[i]);
                     item.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
-                    item.setBackgroundColor(0x559966CC);
+                    item.setBackgroundColor(Color.WHITE);
                     linLayout.addView(item);
-                    Log.d(TAG,"ITEM  " + i);
+//                    Log.d(TAG,"ITEM  " + i);
             }
         }
-
-
     }
 
+    // Parsing and saving gained data into shared preferences
     class ParseTask extends AsyncTask<Void, Void, String> {
 
         HttpURLConnection urlConnection = null;
@@ -280,9 +284,11 @@ public class ContentActivity extends Activity {
             sharedPreferencesContent = getPreferences(MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPreferencesContent.edit();
 
+
             try {
                 JSONArray jsonArray = new JSONArray(resultJson);
                 ArrayList<ListContentObject> contentRecords = new ArrayList<ListContentObject>();
+
 
                 DateFormat parser = new SimpleDateFormat("dd.MM.yyyy kk:mm");
 
@@ -294,11 +300,10 @@ public class ContentActivity extends Activity {
                     char[] temp1 = new char[5];
                     jsonArray.getJSONObject(i).getString("TIME_PAIR").getChars(0, 5, temp1, 0);
                     String dateBuilder = jsonArray.getJSONObject(i).getString("DATE_REG") + " " + new String(temp1);
-                    Log.d(TAG, "dateBuilder:" + dateBuilder);
+//                    Log.d(TAG, "dateBuilder:" + dateBuilder);
 
                     newContentObject.fullDate = parser.parse(dateBuilder);
-                    Log.d(TAG, "FULLDATE:" + newContentObject.fullDate);
-
+//                    Log.d(TAG, "FULLDATE:" + newContentObject.fullDate);
 
                     newContentObject.dayOfTheWeek = jsonArray.getJSONObject(i).getString("NAME_WDAY");
                     newContentObject.lecturer = jsonArray.getJSONObject(i).getString("NAME_FIO");
@@ -312,9 +317,10 @@ public class ContentActivity extends Activity {
                 Gson gson = new Gson();
                 String jsonContentString = gson.toJson(contentRecords);
 
-                editor.putString(CONTENT_KEY, jsonContentString);
+                Intent intent = getIntent();
+                editor.putString(intent.getStringExtra("content_title"), jsonContentString);
                 editor.apply();
-                Log.d(TAG, "sharedPreferencesContent:" + sharedPreferencesContent.getString(CONTENT_KEY, ""));
+                Log.d(TAG, "sharedPreferencesContent:" + sharedPreferencesContent.getString(intent.getStringExtra("content_title"), ""));
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -334,6 +340,7 @@ public class ContentActivity extends Activity {
             readDataFromSharedPreferences();
             setContentListView();
             progress.dismiss();
+
         }
     }
 

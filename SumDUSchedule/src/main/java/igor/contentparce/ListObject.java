@@ -13,4 +13,11 @@ public class ListObject {
         return this.title;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(final String title) {
+        this.title = title;
+    }
 }
