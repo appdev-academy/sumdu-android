@@ -20,4 +20,5 @@ public class ListObject {
     public void setTitle(final String title) {
         this.title = title;
     }
+
 }

@@ -3,7 +3,7 @@ package igor.contentparce;
 import java.util.Comparator;
 
 
-public class ListObjectComparator implements Comparator<ListObject> {
+public class ListObjectTitleComparator implements Comparator<ListObject> {
 
     @Override
     public int compare(ListObject object1, ListObject object2) {

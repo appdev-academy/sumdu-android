@@ -80,8 +80,8 @@ public class ContentActivity extends Activity {
 
         } else {
 
-            Toast.makeText(getApplicationContext(),
-                    "Nice connection", Toast.LENGTH_LONG).show();
+//            Toast.makeText(getApplicationContext(),
+//                    "Nice connection", Toast.LENGTH_LONG).show();
             new ParseTask().execute();
 
         }

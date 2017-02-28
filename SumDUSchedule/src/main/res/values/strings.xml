@@ -3,4 +3,7 @@
     <string name="search_hint">Search...</string>
     <string name="action_search">Search</string>
     <string name="title_content"></string>
+    <string name="clean_history">Очистити історію</string>
+    <string name="delete_element">Видалити елемент</string>
+    <string name="cancel">Відміна</string>
     </resources>
