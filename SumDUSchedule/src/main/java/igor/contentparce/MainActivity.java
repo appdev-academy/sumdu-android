@@ -1,10 +1,8 @@
 package igor.contentparce;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
+import android.app.DialogFragment;
 import android.app.TabActivity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
@@ -13,6 +11,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -42,8 +41,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-
-import static android.R.attr.x;
 
 
 public class MainActivity extends TabActivity {
@@ -89,14 +86,19 @@ public class MainActivity extends TabActivity {
     private ArrayList<ListObject> filteredGroups;
     private ArrayList<ListObject> filteredTeachers;
 
+    DialogFragment dialogFragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
         listView = (ListView) findViewById(R.id.lvContent);
+        dialogFragment = new DialogOnLongClick();
+
 //        registerForContextMenu(listView);
         setOnItemClickListener();
+        listView.setLongClickable(true);
 
         checkConnection();
         if (connectionStatus != 0) {
@@ -108,67 +110,55 @@ public class MainActivity extends TabActivity {
         filterDataWithQuery(searchQuery);
         setAdapterByContent();
 
-        listView.setLongClickable(true);
 
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int pos, long id) {
-
-                elementPosition = pos;
-
-                showDialog(DIALOG_DELETE);
-
-                return false;
-            }
-        });
     }
 
-        protected Dialog onCreateDialog(int id) {
-            if (id == DIALOG_DELETE) {
-                AlertDialog.Builder adb = new AlertDialog.Builder(this);
-                // заголовок
-                adb.setTitle("Історія");
-                // сообщение
-                adb.setMessage("Оберіть дію над вмістом збереженим в історії:");
-//                // иконка
-//                adb.setIcon(android.R.drawable.ic_dialog_info);
-                // кнопка положительного ответа
-                adb.setPositiveButton(R.string.delete_element, myClickListener);
-                // кнопка отрицательного ответа
-                adb.setNegativeButton(R.string.clean_history, myClickListener);
-                // создаем диалог
-                return adb.create();
-            }
-            return super.onCreateDialog(id);
-        }
-    DialogInterface.OnClickListener myClickListener = new DialogInterface.OnClickListener() {
-        public void onClick(DialogInterface dialog, int which) {
-            switch (which) {
-                // положительная кнопка
-                case Dialog.BUTTON_POSITIVE:
-
-                    Gson gson = new Gson();
-                    sharedPreferences = getPreferences(MODE_PRIVATE);
-
-                    filteredHistory.remove(elementPosition);
-                    Log.d(TAG, "pos: " + elementPosition);
-
-                    String jsonHistoryString = gson.toJson(filteredHistory);
-
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString(HISTORY_KEY, jsonHistoryString);
-                    editor.apply();
-
-                    setAdapterByContent();
-                    break;
-                // негативная кнопка
-                case Dialog.BUTTON_NEGATIVE:
-                    cleanHistoryInSharedPreferences();
-                    setAdapterByContent();
-                    break;
-            }
-        }
-    };
+//        protected DialogOnLongClick onCreateDialog(int id) {
+//            if (id == DIALOG_DELETE) {
+//                AlertDialog.Builder adb = new AlertDialog.Builder(this);
+//                // заголовок
+//                adb.setTitle("Історія");
+//                // сообщение
+//                adb.setMessage("Оберіть дію над вмістом збереженим в історії:");
+////                // иконка
+////                adb.setIcon(android.R.drawable.ic_dialog_info);
+//                // кнопка положительного ответа
+//                adb.setPositiveButton(R.string.delete_element, myClickListener);
+//                // кнопка отрицательного ответа
+//                adb.setNegativeButton(R.string.clean_history, myClickListener);
+//                // создаем диалог
+//                return adb.create();
+//            }
+//            return super.onCreateDialog(id);
+//        }
+//    DialogInterface.OnClickListener myClickListener = new DialogInterface.OnClickListener() {
+//        public void onClick(DialogInterface dialog, int which) {
+//            switch (which) {
+//                // положительная кнопка
+//                case DialogOnLongClick.BUTTON_POSITIVE:
+//
+//                    Gson gson = new Gson();
+//                    sharedPreferences = getPreferences(MODE_PRIVATE);
+//
+//                    filteredHistory.remove(elementPosition);
+//                    Log.d(TAG, "pos: " + elementPosition);
+//
+//                    String jsonHistoryString = gson.toJson(filteredHistory);
+//
+//                    SharedPreferences.Editor editor = sharedPreferences.edit();
+//                    editor.putString(HISTORY_KEY, jsonHistoryString);
+//                    editor.apply();
+//
+//                    setAdapterByContent();
+//                    break;
+//                // негативная кнопка
+//                case DialogOnLongClick.BUTTON_NEGATIVE:
+//                    cleanHistoryInSharedPreferences();
+//                    setAdapterByContent();
+//                    break;
+//            }
+//        }
+//    };
 
 
     // Adding and setting up SearchView
@@ -286,7 +276,7 @@ public class MainActivity extends TabActivity {
         tabHost.getTabWidget().getChildAt(3).getLayoutParams().width = 50;
 
         // This tab will be chosen as default
-        tabHost.setCurrentTabByTag("group");
+        tabHost.setCurrentTabByTag("groups");
 
         // handler of tab change
         tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
@@ -295,6 +285,7 @@ public class MainActivity extends TabActivity {
                 filterDataWithQuery(searchQuery);
                 setAdapterByContent();
                 checkConnection();
+                onLongItemClickListener();
                 if(connectionStatus != 0) {
                     new ParseAuditoriumsGroupsTeachers().execute();
                 }
@@ -302,7 +293,28 @@ public class MainActivity extends TabActivity {
         });
     }
 
+    public void deleteElement() {
 
+        Gson gson = new Gson();
+                    sharedPreferences = getPreferences(MODE_PRIVATE);
+
+                    filteredHistory.remove(elementPosition);
+                    Log.d(TAG, "pos: " + elementPosition);
+
+                    String jsonHistoryString = gson.toJson(filteredHistory);
+
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString(HISTORY_KEY, jsonHistoryString);
+                    editor.apply();
+
+                    setAdapterByContent();
+    }
+
+    public void cleanHistory() {
+
+        cleanHistoryInSharedPreferences();
+                    setAdapterByContent();
+    }
 
     // Filtering data with entered query
     private void filterDataWithQuery(String query) {
@@ -337,7 +349,7 @@ public class MainActivity extends TabActivity {
                         contentID = auditoriums.objectType;
                         chosenID = auditoriums.id;
                         content_title = auditoriums.title;
-                        if (connectionStatus != 0) {
+                        if (history.toString().contains(auditoriums.title) && connectionStatus == 0 || connectionStatus != 0) {
                             saveHistoryToSharedPreferences(auditoriums.id, auditoriums.title, auditoriums.objectType);
                         }
                     } catch (Exception e) {
@@ -349,7 +361,7 @@ public class MainActivity extends TabActivity {
                         contentID = groups.objectType;
                         chosenID = groups.id;
                         content_title = groups.title;
-                        if (connectionStatus != 0) {
+                        if (history.toString().contains(groups.title) && connectionStatus == 0 || connectionStatus != 0) {
                             saveHistoryToSharedPreferences(groups.id, groups.title, groups.objectType);
                         }
                     } catch (Exception e) {
@@ -363,27 +375,21 @@ public class MainActivity extends TabActivity {
                         content_title = teachers.title;
 
                         if (history.toString().contains(teachers.title) && connectionStatus == 0 || connectionStatus != 0) {
-//                            Log.d(TAG, "checkForOfflineMode: " + checkForOfflineMode);
-//                            checkForOfflineMode = 1;
-//                            Log.d(TAG, "checkForOfflineMode: " + checkForOfflineMode);
                             saveHistoryToSharedPreferences(teachers.id, teachers.title, teachers.objectType);
+//                       }
                         }
-//                        } else Toast.makeText(getApplicationContext(),
-//                                "Лише збережений в історії розклад доступний в offline режимі.", Toast.LENGTH_LONG).show();
-//                        checkForOfflineMode = 0;
 
                     } catch (Exception e) {
                     }
                 } else if (tabHost.getCurrentTabTag().equals("history")) {
                     try {
-                        ListObject history = filteredHistory.get(position);
-                        contentID = history.objectType;
-                        chosenID = history.id;
-                        content_title = history.title;
+                        ListObject historyObject = filteredHistory.get(position);
+                        contentID = historyObject.objectType;
+                        chosenID = historyObject.id;
+                        content_title = historyObject.title;
                         filteredHistory.remove(position);
-                        if (connectionStatus != 0) {
-                            saveHistoryToSharedPreferences(history.id, history.title, history.objectType);
-                        }
+
+                            saveHistoryToSharedPreferences(historyObject.id, historyObject.title, historyObject.objectType);
                     } catch (Exception e) {
                     }
                 }
@@ -398,13 +404,30 @@ public class MainActivity extends TabActivity {
                 Date endDate = calendar.getTime();
 
                 String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
-                Log.d(TAG, "checkForOfflineMode: " + checkForOfflineMode);
 
-                if (downloadURL != null) {
+                if (downloadURL != null && history.toString().contains(content_title) && connectionStatus == 0 || connectionStatus != 0 && downloadURL != null) {
                     intentToContentActivity(contentID, chosenID, startDate, endDate);
-                }
+                 } else Toast.makeText(getApplicationContext(),
+            "Лише збережений в історії розклад доступний в offline режимі.", Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private void onLongItemClickListener() {
+
+        Log.d(TAG, "TabTag: " + tabHost.getCurrentTabTag());
+//        if (tabHost.getCurrentTabTag().equals("groups")) {
+            listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+                @Override
+                public boolean onItemLongClick(AdapterView<?> adapterView, View view, int pos, long id) {
+
+                    elementPosition = pos;
+                    dialogFragment.show(getFragmentManager(), "dialogFragment");
+                    return false;
+                }
+            });
+//        }
+
     }
 
     // Checking internet connection
