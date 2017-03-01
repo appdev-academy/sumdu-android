@@ -13,20 +13,17 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.SparseBooleanArray;
-import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SearchView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TabHost;
-import android.widget.TabWidget;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -40,16 +37,14 @@ import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Deque;
+
+import static android.R.attr.x;
+
 
 public class MainActivity extends TabActivity {
 
@@ -63,8 +58,12 @@ public class MainActivity extends TabActivity {
 
     final int DIALOG_DELETE = 1;
 
-    // Variable for connection status
-    private int connectionStatus = 1;
+    // Connection status variable
+    private int connectionStatus = 0;
+
+    private int checkForOfflineMode = 0;
+
+    private int elementPosition = 0;
 
     // Special keys for values
     final String GROUPS_KEY = "groups";
@@ -77,7 +76,6 @@ public class MainActivity extends TabActivity {
     private TabHost tabHost;
     private String searchQuery = "";
     private String content_title = null;
-    private int elementPosition = 0;
 
     // ArrayLists for getting from sharedPreferences unfiltered elements
     private ArrayList<ListObject> history;
@@ -90,9 +88,6 @@ public class MainActivity extends TabActivity {
     private ArrayList<ListObject> filteredAuditoriums;
     private ArrayList<ListObject> filteredGroups;
     private ArrayList<ListObject> filteredTeachers;
-
-    private ArrayDeque<ListObject> listHistory;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -278,11 +273,20 @@ public class MainActivity extends TabActivity {
         tabSpec.setContent(R.id.lvContent);
         tabHost.addTab(tabSpec);
 
-//     !!   tabHost.getTabWidget().getChildAt(0).getLayoutParams().width = 5;
+        TextView textView1 = (TextView) tabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title);
+        textView1.setTextSize(11);
+        tabHost.getTabWidget().getChildAt(1).getLayoutParams().width = 50;
 
+        TextView textView2 = (TextView) tabHost.getTabWidget().getChildAt(2).findViewById(android.R.id.title);
+        textView2.setTextSize(11);
+        tabHost.getTabWidget().getChildAt(2).getLayoutParams().width = 50;
+
+        TextView textView3 = (TextView) tabHost.getTabWidget().getChildAt(3).findViewById(android.R.id.title);
+        textView3.setTextSize(11);
+        tabHost.getTabWidget().getChildAt(3).getLayoutParams().width = 50;
 
         // This tab will be chosen as default
-        tabHost.setCurrentTabByTag("groups");
+        tabHost.setCurrentTabByTag("group");
 
         // handler of tab change
         tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
@@ -357,9 +361,17 @@ public class MainActivity extends TabActivity {
                         contentID = teachers.objectType;
                         chosenID = teachers.id;
                         content_title = teachers.title;
-                        if (connectionStatus != 0) {
+
+                        if (history.toString().contains(teachers.title) && connectionStatus == 0 || connectionStatus != 0) {
+//                            Log.d(TAG, "checkForOfflineMode: " + checkForOfflineMode);
+//                            checkForOfflineMode = 1;
+//                            Log.d(TAG, "checkForOfflineMode: " + checkForOfflineMode);
                             saveHistoryToSharedPreferences(teachers.id, teachers.title, teachers.objectType);
                         }
+//                        } else Toast.makeText(getApplicationContext(),
+//                                "Лише збережений в історії розклад доступний в offline режимі.", Toast.LENGTH_LONG).show();
+//                        checkForOfflineMode = 0;
+
                     } catch (Exception e) {
                     }
                 } else if (tabHost.getCurrentTabTag().equals("history")) {
@@ -386,6 +398,8 @@ public class MainActivity extends TabActivity {
                 Date endDate = calendar.getTime();
 
                 String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
+                Log.d(TAG, "checkForOfflineMode: " + checkForOfflineMode);
+
                 if (downloadURL != null) {
                     intentToContentActivity(contentID, chosenID, startDate, endDate);
                 }
@@ -444,7 +458,6 @@ public class MainActivity extends TabActivity {
     // Intent to new Activity
     private void intentToContentActivity(String contentID, String chosenID, Date startDate, Date endDate) {
 
-//        if (connectionStatus == 0 && tabHost.getCurrentTabTag().equals("history") || connectionStatus != 0) {
         String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
         Intent intent = new Intent(this, ContentActivity.class);
         intent.putExtra("downloadURL", downloadURL);
@@ -452,10 +465,7 @@ public class MainActivity extends TabActivity {
         intent.putExtra("connectionStatus", connectionStatus);
         startActivity(intent);
         Log.d(TAG, "Status: " + "GO!");
-//        } else {
-//            Toast.makeText(getApplicationContext(),
-//                    "No connection to server. You only able to use items from History tab.", Toast.LENGTH_LONG).show();
-//        }
+
     }
 
     // Setting up fullDate
@@ -492,63 +502,29 @@ public class MainActivity extends TabActivity {
     // Reading data from shared preferences by special keys considering internet connection status
     private void readDataFromSharedPreferences() {
         sharedPreferences = getPreferences(MODE_PRIVATE);
-        if (sharedPreferences.contains(AUDITORIUMS_KEY) && connectionStatus == 1) {
+        if (sharedPreferences.contains(AUDITORIUMS_KEY)) {
             String fetchResult = sharedPreferences.getString(AUDITORIUMS_KEY, "");
             auditoriums = parseStringToArrayList(fetchResult);
         } else
-
-        if (sharedPreferences.contains(AUDITORIUMS_KEY) && connectionStatus == 0) {
-            String fetchResult = sharedPreferences.getString(AUDITORIUMS_KEY, "");
-            String fetchCompareResult = sharedPreferences.getString(HISTORY_KEY, "");
-            ArrayList<ListObject> fetchResultListObject = parseStringToArrayList(fetchResult);
-            ArrayList<ListObject> fetchCompareResultListObject = parseStringToArrayList(fetchCompareResult);
-            auditoriums = compareLists(fetchCompareResultListObject, fetchResultListObject);
-            Log.d(TAG, "GROUPS: " + auditoriums );
-        } else {
             auditoriums = new ArrayList<ListObject>();
-        }
 
-        if (sharedPreferences.contains(GROUPS_KEY) && connectionStatus == 1) {
+        if (sharedPreferences.contains(GROUPS_KEY)) {
             String fetchResult = sharedPreferences.getString(GROUPS_KEY, "");
             groups = parseStringToArrayList(fetchResult);
         } else
-
-        if (sharedPreferences.contains(GROUPS_KEY) && connectionStatus == 0) {
-            String fetchResult = sharedPreferences.getString(GROUPS_KEY, "");
-            String fetchCompareResult = sharedPreferences.getString(HISTORY_KEY, "");
-            ArrayList<ListObject> fetchResultListObject = parseStringToArrayList(fetchResult);
-            ArrayList<ListObject> fetchCompareResultListObject = parseStringToArrayList(fetchCompareResult);
-            groups = compareLists(fetchCompareResultListObject, fetchResultListObject);
-            Log.d(TAG, "GROUPS: " + groups );
-
-        } else {
             groups = new ArrayList<ListObject>();
-        }
 
-        if (sharedPreferences.contains(TEACHERS_KEY) && connectionStatus == 1) {
+        if (sharedPreferences.contains(TEACHERS_KEY)) {
             String fetchResult = sharedPreferences.getString(TEACHERS_KEY, "");
             teachers = parseStringToArrayList(fetchResult);
         } else
-
-        if (sharedPreferences.contains(TEACHERS_KEY) && connectionStatus == 0) {
-            String fetchResult = sharedPreferences.getString(TEACHERS_KEY, "");
-            String fetchCompareResult = sharedPreferences.getString(HISTORY_KEY, "");
-            ArrayList<ListObject> fetchResultListObject = parseStringToArrayList(fetchResult);
-            ArrayList<ListObject> fetchCompareResultListObject = parseStringToArrayList(fetchCompareResult);
-            teachers = compareLists(fetchCompareResultListObject, fetchResultListObject);
-            Log.d(TAG, "GROUPS: " + teachers );
-        } else {
             teachers = new ArrayList<ListObject>();
-        }
 
         if (sharedPreferences.contains(HISTORY_KEY)) {
             String fetchResult = sharedPreferences.getString(HISTORY_KEY, "");
             history = parseStringToArrayList(fetchResult);
-//            listHistory = parseStringToArrayDeque(fetchResult);
-        } else {
+        } else
             history = new ArrayList<>();
-//            listHistory = new ArrayDeque<>();
-        }
     }
 
     // Comparing objects saved in sharedpreferences and linked in history tab with with their native tabs for displaing there
@@ -571,12 +547,6 @@ public class MainActivity extends TabActivity {
         return records;
     }
 
-    // Parsing Json string to ArrayDeque Gson
-    private ArrayDeque<ListObject> parseStringToArrayDeque(String stringToParse) {
-        Type itemsListType = new TypeToken<ArrayDeque<ListObject>>(){}.getType();
-        ArrayDeque<ListObject> dequeRecords = new Gson().fromJson(stringToParse, itemsListType);
-        return dequeRecords;
-    }
 
     // Setting adapter equal to content of selected tab
     private void setAdapterByContent() {
