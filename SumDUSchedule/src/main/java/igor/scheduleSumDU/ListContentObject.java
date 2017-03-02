@@ -1,7 +1,6 @@
-package igor.contentparce;
+package igor.scheduleSumDU;
 
 
-import java.sql.Time;
 import java.util.Date;
 
 public class ListContentObject {

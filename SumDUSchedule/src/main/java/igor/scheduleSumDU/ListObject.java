@@ -1,4 +1,4 @@
-package igor.contentparce;
+package igor.scheduleSumDU;
 
 
 public class ListObject {

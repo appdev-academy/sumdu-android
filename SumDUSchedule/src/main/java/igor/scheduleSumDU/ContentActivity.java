@@ -1,4 +1,4 @@
-package igor.contentparce;
+package igor.scheduleSumDU;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -15,7 +15,6 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -73,17 +72,13 @@ public class ContentActivity extends Activity {
         Log.d(TAG, "CONNECTION" + connectionStatus);
 
         if (connectionStatus == 0) {
-
             readDataFromSharedPreferences();
             setContentListView();
             progress.dismiss();
 
         } else {
 
-//            Toast.makeText(getApplicationContext(),
-//                    "Nice connection", Toast.LENGTH_LONG).show();
             new ParseTask().execute();
-
         }
 
 
@@ -92,10 +87,10 @@ public class ContentActivity extends Activity {
 
     // Activating "Back" button
     public boolean onOptionsItemSelected(MenuItem item) {
+
         Intent myIntent = new Intent(getApplicationContext(), MainActivity.class);
         startActivityForResult(myIntent, 0);
         return true;
-
     }
 
     // Getting data from sharedpreferences by "content_title"

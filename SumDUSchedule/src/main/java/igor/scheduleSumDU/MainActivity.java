@@ -1,4 +1,4 @@
-package igor.contentparce;
+package igor.scheduleSumDU;
 
 import android.app.DialogFragment;
 import android.app.TabActivity;
@@ -11,7 +11,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -49,24 +48,18 @@ public class MainActivity extends TabActivity {
 
     SharedPreferences sharedPreferences;
 
-    // Static variable for history cleaning
-    final int CLEAN = 1;
-    final int DELETE = 2;
-
-    final int DIALOG_DELETE = 1;
-
     // Connection status variable
     private int connectionStatus = 0;
 
-    private int checkForOfflineMode = 0;
-
     private int elementPosition = 0;
 
-    // Special keys for values
+    // Special keys for sharedPreferences values
     final String GROUPS_KEY = "groups";
     final String TEACHERS_KEY = "teachers";
     final String AUDITORIUMS_KEY = "auditoriums";
     final String HISTORY_KEY = "history";
+    final String TAB_KEY = "tab";
+
 
     private SearchView searchView;
     private ListView listView;
@@ -96,7 +89,6 @@ public class MainActivity extends TabActivity {
         listView = (ListView) findViewById(R.id.lvContent);
         dialogFragment = new DialogOnLongClick();
 
-//        registerForContextMenu(listView);
         setOnItemClickListener();
         listView.setLongClickable(true);
 
@@ -110,56 +102,41 @@ public class MainActivity extends TabActivity {
         filterDataWithQuery(searchQuery);
         setAdapterByContent();
 
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        sharedPreferences = getPreferences(MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString(TAB_KEY, tabHost.getCurrentTabTag());
+            editor.apply();
+
 
     }
 
-//        protected DialogOnLongClick onCreateDialog(int id) {
-//            if (id == DIALOG_DELETE) {
-//                AlertDialog.Builder adb = new AlertDialog.Builder(this);
-//                // заголовок
-//                adb.setTitle("Історія");
-//                // сообщение
-//                adb.setMessage("Оберіть дію над вмістом збереженим в історії:");
-////                // иконка
-////                adb.setIcon(android.R.drawable.ic_dialog_info);
-//                // кнопка положительного ответа
-//                adb.setPositiveButton(R.string.delete_element, myClickListener);
-//                // кнопка отрицательного ответа
-//                adb.setNegativeButton(R.string.clean_history, myClickListener);
-//                // создаем диалог
-//                return adb.create();
-//            }
-//            return super.onCreateDialog(id);
-//        }
-//    DialogInterface.OnClickListener myClickListener = new DialogInterface.OnClickListener() {
-//        public void onClick(DialogInterface dialog, int which) {
-//            switch (which) {
-//                // положительная кнопка
-//                case DialogOnLongClick.BUTTON_POSITIVE:
-//
-//                    Gson gson = new Gson();
-//                    sharedPreferences = getPreferences(MODE_PRIVATE);
-//
-//                    filteredHistory.remove(elementPosition);
-//                    Log.d(TAG, "pos: " + elementPosition);
-//
-//                    String jsonHistoryString = gson.toJson(filteredHistory);
-//
-//                    SharedPreferences.Editor editor = sharedPreferences.edit();
-//                    editor.putString(HISTORY_KEY, jsonHistoryString);
-//                    editor.apply();
-//
-//                    setAdapterByContent();
-//                    break;
-//                // негативная кнопка
-//                case DialogOnLongClick.BUTTON_NEGATIVE:
-//                    cleanHistoryInSharedPreferences();
-//                    setAdapterByContent();
-//                    break;
-//            }
-//        }
-//    };
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (sharedPreferences.contains(TAB_KEY)) {
+            Log.d(TAG, "onStart!!!!!");
+            tabHost.setCurrentTabByTag(sharedPreferences.getString(TAB_KEY, ""));
+        }
+    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        sharedPreferences = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove(TAB_KEY);
+        editor.apply();
+
+        Log.d(TAG, "ONDESTROYYYYY");
+
+    }
 
     // Adding and setting up SearchView
     @Override
@@ -189,47 +166,6 @@ public class MainActivity extends TabActivity {
         }
         return super.onCreateOptionsMenu(menu);
     }
-
-//    // Creating context menu for deleting history from shared preferences
-//    @Override
-//    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
-//        if (tabHost.getCurrentTabTag().equals("history")) {
-//            switch (view.getId()) {
-//                case R.id.lvContent:
-//                    menu.setHeaderTitle("Історія");
-//                    menu.add(0, CLEAN, 0, "Очистити історію");
-//                    menu.add(0, DELETE, 0, "Видалити елемент");
-//                    break;
-//            }
-//        }
-//    }
-//
-//    @Override
-//    public boolean onContextItemSelected (MenuItem item){
-//        switch (item.getItemId()) {
-//            case CLEAN:
-//                cleanHistoryInSharedPreferences();
-//                checkConnection();
-//                if(connectionStatus != 0) {
-//                    new ParseAuditoriumsGroupsTeachers().execute();
-//                }
-//                setAdapterByContent();
-//                break;
-////            case DELETE:
-////                AdapterView.AdapterContextMenuInfo adapterContextMenuInfo = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-////
-////                listHistory.remove();
-////
-////                checkConnection();
-////                if(connectionStatus != 0) {
-////                    new ParseAuditoriumsGroupsTeachers().execute();
-////                }
-////                setAdapterByContent();
-////                break;
-//        }
-//
-//        return super.onContextItemSelected(item);
-//    }
 
     // Adding tab bar
     public void setupTabBar() {
@@ -276,11 +212,18 @@ public class MainActivity extends TabActivity {
         tabHost.getTabWidget().getChildAt(3).getLayoutParams().width = 50;
 
         // This tab will be chosen as default
-        tabHost.setCurrentTabByTag("groups");
+        tabHost.setCurrentTabByTag("history");
 
         // handler of tab change
         tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
             public void onTabChanged(String tabId) {
+
+                String currentTab = tabHost.getCurrentTabTag();
+                sharedPreferences = getPreferences(MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString(TAB_KEY, currentTab);
+                Log.d(TAG, "onTabChanged: " + currentTab);
+                editor.apply();
 
                 filterDataWithQuery(searchQuery);
                 setAdapterByContent();
@@ -296,24 +239,24 @@ public class MainActivity extends TabActivity {
     public void deleteElement() {
 
         Gson gson = new Gson();
-                    sharedPreferences = getPreferences(MODE_PRIVATE);
+        sharedPreferences = getPreferences(MODE_PRIVATE);
 
-                    filteredHistory.remove(elementPosition);
-                    Log.d(TAG, "pos: " + elementPosition);
+        filteredHistory.remove(elementPosition);
+        Log.d(TAG, "pos: " + elementPosition);
 
-                    String jsonHistoryString = gson.toJson(filteredHistory);
+        String jsonHistoryString = gson.toJson(filteredHistory);
 
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString(HISTORY_KEY, jsonHistoryString);
-                    editor.apply();
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(HISTORY_KEY, jsonHistoryString);
+        editor.apply();
 
-                    setAdapterByContent();
+        setAdapterByContent();
     }
 
     public void cleanHistory() {
 
         cleanHistoryInSharedPreferences();
-                    setAdapterByContent();
+        setAdapterByContent();
     }
 
     // Filtering data with entered query
@@ -389,7 +332,7 @@ public class MainActivity extends TabActivity {
                         content_title = historyObject.title;
                         filteredHistory.remove(position);
 
-                            saveHistoryToSharedPreferences(historyObject.id, historyObject.title, historyObject.objectType);
+                        saveHistoryToSharedPreferences(historyObject.id, historyObject.title, historyObject.objectType);
                     } catch (Exception e) {
                     }
                 }
@@ -407,27 +350,28 @@ public class MainActivity extends TabActivity {
 
                 if (downloadURL != null && history.toString().contains(content_title) && connectionStatus == 0 || connectionStatus != 0 && downloadURL != null) {
                     intentToContentActivity(contentID, chosenID, startDate, endDate);
-                 } else Toast.makeText(getApplicationContext(),
-            "Лише збережений в історії розклад доступний в offline режимі.", Toast.LENGTH_LONG).show();
+                } else Toast.makeText(getApplicationContext(),
+                        "Лише збережений в історії розклад доступний в offline режимі.", Toast.LENGTH_LONG).show();
             }
         });
     }
 
     private void onLongItemClickListener() {
 
-        Log.d(TAG, "TabTag: " + tabHost.getCurrentTabTag());
-//        if (tabHost.getCurrentTabTag().equals("groups")) {
+        sharedPreferences = getPreferences(MODE_PRIVATE);
+
+
             listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
                 @Override
                 public boolean onItemLongClick(AdapterView<?> adapterView, View view, int pos, long id) {
-
-                    elementPosition = pos;
-                    dialogFragment.show(getFragmentManager(), "dialogFragment");
+                    Log.d(TAG, "TabTag: " + sharedPreferences.getString(TAB_KEY, ""));
+                    if (sharedPreferences.getString(TAB_KEY, "").equals("history")) {
+                        elementPosition = pos;
+                        dialogFragment.show(getFragmentManager(), "dialogFragment");
+                    }
                     return false;
                 }
             });
-//        }
-
     }
 
     // Checking internet connection
@@ -603,10 +547,10 @@ public class MainActivity extends TabActivity {
         historyObject.objectType = historySaveObjectType;
 
         for (int i = 0; i < filteredHistory.size(); i++) {
-           if (filteredHistory.toArray()[i].toString().contains(historyObject.title)) {
-               filteredHistory.remove(i);
-               Log.d(TAG, "!!!");
-           }
+            if (filteredHistory.toArray()[i].toString().contains(historyObject.title)) {
+                filteredHistory.remove(i);
+                Log.d(TAG, "!!!");
+            }
             Log.d(TAG, "I:" + i);
         }
 
@@ -636,6 +580,7 @@ public class MainActivity extends TabActivity {
         editor.apply();
         Log.d(TAG, "HISTORY_KEY" + sharedPreferences.getString(HISTORY_KEY, ""));
     }
+
 
     // Parsing, serializing and saving content gained from server
     class ParseAuditoriumsGroupsTeachers extends AsyncTask<Void, Void, Boolean> {

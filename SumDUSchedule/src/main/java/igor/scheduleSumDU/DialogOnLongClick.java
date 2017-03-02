@@ -1,4 +1,4 @@
-package igor.contentparce;
+package igor.scheduleSumDU;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
