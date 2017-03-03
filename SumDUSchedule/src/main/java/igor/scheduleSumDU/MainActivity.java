@@ -1,8 +1,10 @@
 package igor.scheduleSumDU;
 
+import android.app.AlertDialog;
 import android.app.DialogFragment;
 import android.app.TabActivity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
@@ -79,7 +81,6 @@ public class MainActivity extends TabActivity {
     private ArrayList<ListObject> filteredGroups;
     private ArrayList<ListObject> filteredTeachers;
 
-    DialogFragment dialogFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +88,6 @@ public class MainActivity extends TabActivity {
         setContentView(R.layout.main);
 
         listView = (ListView) findViewById(R.id.lvContent);
-        dialogFragment = new DialogOnLongClick();
 
         setOnItemClickListener();
         listView.setLongClickable(true);
@@ -236,6 +236,32 @@ public class MainActivity extends TabActivity {
         });
     }
 
+    // Building and calling dialog for "History"
+    public void dialog() {
+
+        AlertDialog.Builder dialogAlert = new AlertDialog.Builder(MainActivity.this);
+        dialogAlert.setTitle(R.string.history);
+        dialogAlert.setMessage(R.string.body_text);
+        dialogAlert.setPositiveButton(R.string.delete_element, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+
+                deleteElement();
+                setAdapterByContent();
+            }
+        });
+
+        dialogAlert.setNegativeButton(R.string.clean_history, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+
+                cleanHistory();
+                setAdapterByContent();
+            }
+        });
+
+        dialogAlert.show();
+    }
+
+    // Deleting one selected element on "History" tab
     public void deleteElement() {
 
         Gson gson = new Gson();
@@ -243,9 +269,7 @@ public class MainActivity extends TabActivity {
 
         filteredHistory.remove(elementPosition);
         Log.d(TAG, "pos: " + elementPosition);
-
         String jsonHistoryString = gson.toJson(filteredHistory);
-
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(HISTORY_KEY, jsonHistoryString);
         editor.apply();
@@ -253,6 +277,7 @@ public class MainActivity extends TabActivity {
         setAdapterByContent();
     }
 
+    // Cleaning whole history
     public void cleanHistory() {
 
         cleanHistoryInSharedPreferences();
@@ -367,7 +392,8 @@ public class MainActivity extends TabActivity {
                     Log.d(TAG, "TabTag: " + sharedPreferences.getString(TAB_KEY, ""));
                     if (sharedPreferences.getString(TAB_KEY, "").equals("history")) {
                         elementPosition = pos;
-                        dialogFragment.show(getFragmentManager(), "dialogFragment");
+//                        dialogFragment.show(getFragmentManager(), "dialogFragment");
+                        dialog();
                     }
                     return false;
                 }
@@ -571,7 +597,7 @@ public class MainActivity extends TabActivity {
 
     // Clean whole history in sharedPreferences
     private void cleanHistoryInSharedPreferences() {
-//        listHistory.clear();
+
         filteredHistory.clear();
         sharedPreferences = getPreferences(MODE_PRIVATE);
         Log.d(TAG, "HISTORY_KEY" + sharedPreferences.getString(HISTORY_KEY, ""));
@@ -588,7 +614,7 @@ public class MainActivity extends TabActivity {
         @Override
         protected Boolean doInBackground(Void... params) {
             try {
-                // Download HTML document and parse `select` objects
+                // Download HTML document and parse `se lect` objects
                 Document document = Jsoup.connect("http://schedule.sumdu.edu.ua/").get();
                 Element auditoriums = document.select("#auditorium").first();
                 Element groups = document.select("#group").first();

@@ -7,4 +7,5 @@
     <string name="delete_element">Видалити елемент</string>
     <string name="cancel">Відміна</string>
     <string name="body_text">Оберіть дію над вмістом збереженим в історії:</string>
-    </resources>
+    <string name="history">Історія</string>
+</resources>
