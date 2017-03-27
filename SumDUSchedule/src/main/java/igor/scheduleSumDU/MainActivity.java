@@ -1,18 +1,22 @@
 package igor.scheduleSumDU;
 
 import android.app.AlertDialog;
-import android.app.DialogFragment;
+import android.app.ProgressDialog;
 import android.app.TabActivity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -51,7 +55,7 @@ public class MainActivity extends TabActivity {
     SharedPreferences sharedPreferences;
 
     // Connection status variable
-    private int connectionStatus = 0;
+    private int connectionStatus = 1;
 
     private int elementPosition = 0;
 
@@ -66,20 +70,24 @@ public class MainActivity extends TabActivity {
     private SearchView searchView;
     private ListView listView;
     private TabHost tabHost;
-    private String searchQuery = "";
+    public String searchQuery = "";
     private String content_title = null;
 
     // ArrayLists for getting from sharedPreferences unfiltered elements
-    private ArrayList<ListObject> history;
-    private ArrayList<ListObject> auditoriums;
-    private ArrayList<ListObject> groups;
-    private ArrayList<ListObject> teachers;
+    public ArrayList<ListObject> history;
+    public ArrayList<ListObject> auditoriums;
+    public ArrayList<ListObject> groups;
+    public ArrayList<ListObject> teachers;
 
     // ArrayLists for filtered with query elements
-    private ArrayList<ListObject> filteredHistory;
-    private ArrayList<ListObject> filteredAuditoriums;
-    private ArrayList<ListObject> filteredGroups;
-    private ArrayList<ListObject> filteredTeachers;
+    public ArrayList<ListObject> filteredHistory;
+    public ArrayList<ListObject> filteredAuditoriums;
+    public ArrayList<ListObject> filteredGroups;
+    public ArrayList<ListObject> filteredTeachers;
+
+    public Context mainActivityContext;
+
+    ProgressDialog progress;
 
 
     @Override
@@ -87,56 +95,40 @@ public class MainActivity extends TabActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
+        DataManager dataManager = DataManager.getInstance();
+        dataManager.context = getApplicationContext();
+        mainActivityContext = getApplicationContext();
+
         listView = (ListView) findViewById(R.id.lvContent);
 
         setOnItemClickListener();
         listView.setLongClickable(true);
 
-        checkConnection();
-        if (connectionStatus != 0) {
-            new ParseAuditoriumsGroupsTeachers().execute();
-        }
+        getActionBar().setIcon(
+                new ColorDrawable(ContextCompat.getColor(this, android.R.color.transparent)));
+
+        new ParseAuditoriumsGroupsTeachers().execute();
 
         readDataFromSharedPreferences();
+
         setupTabBar();
-        filterDataWithQuery(searchQuery);
+
+        onLongItemClickListener();
+
+        filterDataWithQuery();
+
         setAdapterByContent();
 
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        sharedPreferences = getPreferences(MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString(TAB_KEY, tabHost.getCurrentTabTag());
-            editor.apply();
-
-
+    public void progressDialog() {
+        progress = new ProgressDialog(this);
+        progress.setTitle("Загрузка");
+        progress.setMessage("Підключення до сервера");
+        progress.setCanceledOnTouchOutside(false);
+        progress.show();
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (sharedPreferences.contains(TAB_KEY)) {
-            Log.d(TAG, "onStart!!!!!");
-            tabHost.setCurrentTabByTag(sharedPreferences.getString(TAB_KEY, ""));
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        sharedPreferences = getPreferences(MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.remove(TAB_KEY);
-        editor.apply();
-
-        Log.d(TAG, "ONDESTROYYYYY");
-
-    }
 
     // Adding and setting up SearchView
     @Override
@@ -158,7 +150,8 @@ public class MainActivity extends TabActivity {
                 @Override
                 public boolean onQueryTextChange(String newText) {
                     searchQuery = newText;
-                    filterDataWithQuery(searchQuery);
+                    filterDataWithQuery();
+                    setAdapterByContent();
 
                     return false;
                 }
@@ -169,6 +162,7 @@ public class MainActivity extends TabActivity {
 
     // Adding tab bar
     public void setupTabBar() {
+
         tabHost = (TabHost) findViewById(android.R.id.tabhost);
         // initialization
         tabHost.setup();
@@ -200,44 +194,38 @@ public class MainActivity extends TabActivity {
         tabHost.addTab(tabSpec);
 
         TextView textView1 = (TextView) tabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title);
-        textView1.setTextSize(11);
+        textView1.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size));
         tabHost.getTabWidget().getChildAt(1).getLayoutParams().width = 50;
 
         TextView textView2 = (TextView) tabHost.getTabWidget().getChildAt(2).findViewById(android.R.id.title);
-        textView2.setTextSize(11);
+        textView2.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size));
         tabHost.getTabWidget().getChildAt(2).getLayoutParams().width = 50;
 
         TextView textView3 = (TextView) tabHost.getTabWidget().getChildAt(3).findViewById(android.R.id.title);
-        textView3.setTextSize(11);
+        textView3.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size));
         tabHost.getTabWidget().getChildAt(3).getLayoutParams().width = 50;
 
         // This tab will be chosen as default
-        tabHost.setCurrentTabByTag("history");
+        tabHost.setCurrentTab(1);
+        tabHost.setCurrentTab(0);
 
-        // handler of tab change
+        // Handler of tab change
         tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
             public void onTabChanged(String tabId) {
 
-                String currentTab = tabHost.getCurrentTabTag();
-                sharedPreferences = getPreferences(MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString(TAB_KEY, currentTab);
-                Log.d(TAG, "onTabChanged: " + currentTab);
-                editor.apply();
-
-                filterDataWithQuery(searchQuery);
+                filterDataWithQuery();
                 setAdapterByContent();
-                checkConnection();
+
                 onLongItemClickListener();
-                if(connectionStatus != 0) {
-                    new ParseAuditoriumsGroupsTeachers().execute();
-                }
+//                new ParseAuditoriumsGroupsTeachers().execute();
             }
         });
     }
 
+
     // Building and calling dialog for "History"
     public void dialog() {
+        final DataManager dataManager = DataManager.getInstance();
 
         AlertDialog.Builder dialogAlert = new AlertDialog.Builder(MainActivity.this);
         dialogAlert.setTitle(R.string.history);
@@ -245,7 +233,7 @@ public class MainActivity extends TabActivity {
         dialogAlert.setPositiveButton(R.string.delete_element, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
 
-                deleteElement();
+                dataManager.deleteElementFromHistory(filteredHistory, elementPosition);
                 setAdapterByContent();
             }
         });
@@ -253,7 +241,7 @@ public class MainActivity extends TabActivity {
         dialogAlert.setNegativeButton(R.string.clean_history, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
 
-                cleanHistory();
+                dataManager.cleanHistoryInSharedPreferences(filteredHistory);
                 setAdapterByContent();
             }
         });
@@ -261,80 +249,68 @@ public class MainActivity extends TabActivity {
         dialogAlert.show();
     }
 
-    // Deleting one selected element on "History" tab
-    public void deleteElement() {
 
-        Gson gson = new Gson();
-        sharedPreferences = getPreferences(MODE_PRIVATE);
+    private void filterDataWithQuery() {
+        DataManager dataManager = DataManager.getInstance();
 
-        filteredHistory.remove(elementPosition);
-        Log.d(TAG, "pos: " + elementPosition);
-        String jsonHistoryString = gson.toJson(filteredHistory);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(HISTORY_KEY, jsonHistoryString);
-        editor.apply();
-
-        setAdapterByContent();
+        filteredAuditoriums = dataManager.filterAuditoriumsWithQuery(searchQuery, filteredAuditoriums, auditoriums);
+        filteredGroups = dataManager.filterGroupsWithQuery(searchQuery, filteredGroups, groups);
+        filteredTeachers = dataManager.filterTeachersWithQuery(searchQuery, filteredTeachers, teachers);
+        filteredHistory = dataManager.filterHistoryWithQuery(searchQuery, filteredHistory, history);
     }
 
-    // Cleaning whole history
-    public void cleanHistory() {
+    private void readDataFromSharedPreferences () {
+        DataManager dataManager = DataManager.getInstance();
 
-        cleanHistoryInSharedPreferences();
-        setAdapterByContent();
+        auditoriums = dataManager.readAuditoriumsFromSharedPreferences();
+        groups = dataManager.readGroupsFromSharedPreferences();
+        teachers = dataManager.readTeachersFromSharedPreferences();
+        history = dataManager.readHistoryFromSharedPreferences();
     }
 
-    // Filtering data with entered query
-    private void filterDataWithQuery(String query) {
-        if (query == null || query == "") {
-            filteredAuditoriums = auditoriums;
-            filteredGroups = groups;
-            filteredTeachers = teachers;
-            filteredHistory = history;
-            setAdapterByContent();
-            return;
-        } else
-            // Filter Auditoriums, Groups, Teachers and History
-            filteredAuditoriums = filterArrayListWithQuery(auditoriums, query);
-        filteredGroups = filterArrayListWithQuery(groups, query);
-        filteredTeachers = filterArrayListWithQuery(teachers, query);
-        filteredHistory =  filterArrayListWithQuery(history, query);
-        setAdapterByContent();
+
+    public void tryToConnect(){
+
+        progressDialog();
+        new ContentActivity().new ParseTask().execute();
+
     }
+
 
     // OnItemClickListener for listView elements
     private void setOnItemClickListener () {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                DataManager dataManager = DataManager.getInstance();
                 String contentID = "";
                 String chosenID = "";
-                checkConnection();
 
-                if (tabHost.getCurrentTabTag().equals("auditoriums")) {
+                if (tabHost.getCurrentTab() == 3) {
                     try {
                         ListObject auditoriums = filteredAuditoriums.get(position);
                         auditoriums.objectType = "id_aud";
                         contentID = auditoriums.objectType;
                         chosenID = auditoriums.id;
                         content_title = auditoriums.title;
-                        if (history.toString().contains(auditoriums.title) && connectionStatus == 0 || connectionStatus != 0) {
-                            saveHistoryToSharedPreferences(auditoriums.id, auditoriums.title, auditoriums.objectType);
-                        }
+//                        if (history.toString().contains(auditoriums.title)) {
+                            dataManager.saveHistoryToSharedPreferences(auditoriums.id, auditoriums.title, auditoriums.objectType, filteredHistory);
+//                        }
                     } catch (Exception e) {
                     }
-                } else if (tabHost.getCurrentTabTag().equals("groups")) {
+                } else if (tabHost.getCurrentTab() == 2) {
                     try {
                         ListObject groups = filteredGroups.get(position);
                         groups.objectType = "id_grp";
                         contentID = groups.objectType;
                         chosenID = groups.id;
                         content_title = groups.title;
-                        if (history.toString().contains(groups.title) && connectionStatus == 0 || connectionStatus != 0) {
-                            saveHistoryToSharedPreferences(groups.id, groups.title, groups.objectType);
-                        }
+//                        if (history.toString().contains(groups.title)) {
+                            dataManager.saveHistoryToSharedPreferences(groups.id, groups.title, groups.objectType, filteredHistory);
+//                        }
                     } catch (Exception e) {
                     }
-                } else if  (tabHost.getCurrentTabTag().equals("teachers")) {
+                } else if  (tabHost.getCurrentTab() == 1) {
                     try {
                         ListObject teachers = filteredTeachers.get(position);
                         teachers.objectType = "id_fio";
@@ -342,14 +318,13 @@ public class MainActivity extends TabActivity {
                         chosenID = teachers.id;
                         content_title = teachers.title;
 
-                        if (history.toString().contains(teachers.title) && connectionStatus == 0 || connectionStatus != 0) {
-                            saveHistoryToSharedPreferences(teachers.id, teachers.title, teachers.objectType);
-//                       }
-                        }
+//                        if (history.toString().contains(teachers.title)) {
+                            dataManager.saveHistoryToSharedPreferences(teachers.id, teachers.title, teachers.objectType, filteredHistory);
+//                        }
 
                     } catch (Exception e) {
                     }
-                } else if (tabHost.getCurrentTabTag().equals("history")) {
+                } else if (tabHost.getCurrentTab() == 0) {
                     try {
                         ListObject historyObject = filteredHistory.get(position);
                         contentID = historyObject.objectType;
@@ -357,7 +332,7 @@ public class MainActivity extends TabActivity {
                         content_title = historyObject.title;
                         filteredHistory.remove(position);
 
-                        saveHistoryToSharedPreferences(historyObject.id, historyObject.title, historyObject.objectType);
+                        dataManager.saveHistoryToSharedPreferences(historyObject.id, historyObject.title, historyObject.objectType, filteredHistory);
                     } catch (Exception e) {
                     }
                 }
@@ -373,7 +348,7 @@ public class MainActivity extends TabActivity {
 
                 String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
 
-                if (downloadURL != null && history.toString().contains(content_title) && connectionStatus == 0 || connectionStatus != 0 && downloadURL != null) {
+                if (downloadURL != null) {
                     intentToContentActivity(contentID, chosenID, startDate, endDate);
                 } else Toast.makeText(getApplicationContext(),
                         "Лише збережений в історії розклад доступний в offline режимі.", Toast.LENGTH_LONG).show();
@@ -383,70 +358,18 @@ public class MainActivity extends TabActivity {
 
     private void onLongItemClickListener() {
 
-        sharedPreferences = getPreferences(MODE_PRIVATE);
-
-
-            listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-                @Override
-                public boolean onItemLongClick(AdapterView<?> adapterView, View view, int pos, long id) {
-                    Log.d(TAG, "TabTag: " + sharedPreferences.getString(TAB_KEY, ""));
-                    if (sharedPreferences.getString(TAB_KEY, "").equals("history")) {
-                        elementPosition = pos;
-//                        dialogFragment.show(getFragmentManager(), "dialogFragment");
-                        dialog();
-                    }
-                    return false;
-                }
-            });
-    }
-
-    // Checking internet connection
-    public void checkConnection() {
-        // запускаем проверку в новом потоке
-        new Thread(new Runnable() {
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public void run(){
-                if (checkInternet()) {
-                    connectionStatus = 1;
-                    Log.d(TAG, "Есть подключение");
-                } else {
-                    connectionStatus = 0;
-                    Log.d(TAG, "Нет подключения");
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int pos, long id) {
+                if (tabHost.getCurrentTabTag().equals("history")) {
+                    elementPosition = pos;
+                    dialog();
                 }
+                return true;
             }
-        }).start();
+        });
     }
 
-    // Main internet connection check method
-    public boolean checkInternet() {
-
-        ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-
-        // проверка подключения
-        if (activeNetwork != null && activeNetwork.isConnected()) {
-            try {
-                // тест доступности внешнего ресурса
-                URL url = new URL("http://schedule.sumdu.edu.ua");
-                HttpURLConnection urlc = (HttpURLConnection)url.openConnection();
-                urlc.setRequestProperty("User-Agent", "test");
-                urlc.setRequestProperty("Connection", "close");
-                urlc.setConnectTimeout(1000); // Timeout в секундах
-                urlc.connect();
-                // статус ресурса OK
-                if (urlc.getResponseCode() == 200) {
-                    return true;
-                }
-                // иначе проверка провалилась
-                return false;
-
-            } catch (IOException e) {
-                Log.d(TAG, "Ошибка проверки подключения к интернету", e);
-                return false;
-            }
-        }
-        return false;
-    }
 
     // Intent to new Activity
     private void intentToContentActivity(String contentID, String chosenID, Date startDate, Date endDate) {
@@ -455,70 +378,27 @@ public class MainActivity extends TabActivity {
         Intent intent = new Intent(this, ContentActivity.class);
         intent.putExtra("downloadURL", downloadURL);
         intent.putExtra("content_title", content_title);
-        intent.putExtra("connectionStatus", connectionStatus);
+//        intent.putExtra("connectionStatus", checkConnection());
         startActivity(intent);
         Log.d(TAG, "Status: " + "GO!");
 
     }
 
-    // Setting up fullDate
-    private String dateToString(Date date) {
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
-        String dateString = dateFormatter.format(date);
-        return dateString;
-    }
 
     // Building up URL for server connectionStatus
     private String scheduleURLFor(String contentID, String chosenID, Date startDate, Date endDate) {
+        DataManager dataManager = DataManager.getInstance();
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("http")
                 .authority("schedule.sumdu.edu.ua")
                 .appendPath("index")
                 .appendPath("json")
                 .appendQueryParameter(contentID, chosenID)
-                .appendQueryParameter("date_beg", dateToString(startDate))
-                .appendQueryParameter("date_end", dateToString(endDate));
+                .appendQueryParameter("date_beg", dataManager.dateToString(startDate))
+                .appendQueryParameter("date_end", dataManager.dateToString(endDate));
         return builder.build().toString();
     }
 
-    // Performing comparison element with query and getting if it's similar
-    private ArrayList<ListObject> filterArrayListWithQuery(ArrayList<ListObject> array, String query) {
-        ArrayList<ListObject> filteredArray = new ArrayList<ListObject>();
-        for (ListObject record : array) {
-            if (record.title.toLowerCase().contains(query.toLowerCase())) {
-                filteredArray.add(record);
-            }
-        }
-        return filteredArray;
-    }
-
-    // Reading data from shared preferences by special keys considering internet connection status
-    private void readDataFromSharedPreferences() {
-        sharedPreferences = getPreferences(MODE_PRIVATE);
-        if (sharedPreferences.contains(AUDITORIUMS_KEY)) {
-            String fetchResult = sharedPreferences.getString(AUDITORIUMS_KEY, "");
-            auditoriums = parseStringToArrayList(fetchResult);
-        } else
-            auditoriums = new ArrayList<ListObject>();
-
-        if (sharedPreferences.contains(GROUPS_KEY)) {
-            String fetchResult = sharedPreferences.getString(GROUPS_KEY, "");
-            groups = parseStringToArrayList(fetchResult);
-        } else
-            groups = new ArrayList<ListObject>();
-
-        if (sharedPreferences.contains(TEACHERS_KEY)) {
-            String fetchResult = sharedPreferences.getString(TEACHERS_KEY, "");
-            teachers = parseStringToArrayList(fetchResult);
-        } else
-            teachers = new ArrayList<ListObject>();
-
-        if (sharedPreferences.contains(HISTORY_KEY)) {
-            String fetchResult = sharedPreferences.getString(HISTORY_KEY, "");
-            history = parseStringToArrayList(fetchResult);
-        } else
-            history = new ArrayList<>();
-    }
 
     // Comparing objects saved in sharedpreferences and linked in history tab with with their native tabs for displaing there
     public ArrayList<ListObject> compareLists(ArrayList<ListObject> prevList, ArrayList<ListObject> modelList) {
@@ -533,80 +413,29 @@ public class MainActivity extends TabActivity {
         return temp;
     }
 
-    // Parsing Json string to ArrayList Gson
-    private ArrayList<ListObject> parseStringToArrayList(String stringToParse) {
-        Type itemsListType = new TypeToken<List<ListObject>>(){}.getType();
-        ArrayList<ListObject> records = new Gson().fromJson(stringToParse, itemsListType);
-        return records;
-    }
-
 
     // Setting adapter equal to content of selected tab
-    private void setAdapterByContent() {
+    public void setAdapterByContent() {
         ListView listView = (ListView)findViewById(R.id.lvContent);
-
-        if (tabHost.getCurrentTabTag().equals("auditoriums")) {
+//        if(filteredAuditoriums == null && filteredGroups == null && filteredTeachers == null && filteredHistory == null) {
+//            Log.d(TAG, "NULL");
+//        } else {
+        Log.d(TAG, "SetAdapter: " + filteredAuditoriums);
+        if (tabHost.getCurrentTab() == 3) {
             ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, filteredAuditoriums);
             listView.setAdapter(contentAdapter);
-        } else if (tabHost.getCurrentTabTag().equals("groups")) {
+        } else if (tabHost.getCurrentTab() == 2) {
             ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, filteredGroups);
             listView.setAdapter(contentAdapter);
-        } else if (tabHost.getCurrentTabTag().equals("teachers")){
+        } else if (tabHost.getCurrentTab() == 1) {
             ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, filteredTeachers);
             listView.setAdapter(contentAdapter);
-        } else if (tabHost.getCurrentTabTag().equals("history")){
+        } else if (tabHost.getCurrentTab() == 0) {
             ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, filteredHistory);
             listView.setAdapter(contentAdapter);
         }
+//        }
     }
-
-    // Saving elements added to history in sharedPreferences
-    private String saveHistoryToSharedPreferences (String historySaveID, String historySaveTitle, String  historySaveObjectType) {
-
-        Gson gson = new Gson();
-        sharedPreferences = getPreferences(MODE_PRIVATE);
-        Log.d(TAG, "filteredHistory:" + filteredHistory);
-
-        ListObject historyObject = new ListObject();
-        historyObject.id = historySaveID;
-        historyObject.title = historySaveTitle;
-        historyObject.objectType = historySaveObjectType;
-
-        for (int i = 0; i < filteredHistory.size(); i++) {
-            if (filteredHistory.toArray()[i].toString().contains(historyObject.title)) {
-                filteredHistory.remove(i);
-                Log.d(TAG, "!!!");
-            }
-            Log.d(TAG, "I:" + i);
-        }
-
-        Collections.reverse(filteredHistory);
-        filteredHistory.add(historyObject);
-        Collections.reverse(filteredHistory);
-
-        Log.d(TAG, "filteredHistory:" + filteredHistory);
-
-        String jsonHistoryString = gson.toJson(filteredHistory);
-
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(HISTORY_KEY, jsonHistoryString);
-        editor.apply();
-
-        return jsonHistoryString;
-    }
-
-    // Clean whole history in sharedPreferences
-    private void cleanHistoryInSharedPreferences() {
-
-        filteredHistory.clear();
-        sharedPreferences = getPreferences(MODE_PRIVATE);
-        Log.d(TAG, "HISTORY_KEY" + sharedPreferences.getString(HISTORY_KEY, ""));
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.remove(HISTORY_KEY);
-        editor.apply();
-        Log.d(TAG, "HISTORY_KEY" + sharedPreferences.getString(HISTORY_KEY, ""));
-    }
-
 
     // Parsing, serializing and saving content gained from server
     class ParseAuditoriumsGroupsTeachers extends AsyncTask<Void, Void, Boolean> {
@@ -625,18 +454,25 @@ public class MainActivity extends TabActivity {
                 String serializedGroups = parseListObjects(groups);
                 String serializedTeachers = parseListObjects(teachers);
 
+                DataManager dataManager = DataManager.getInstance();
+                dataManager.context = getApplicationContext();
+
                 // Save lists of Auditoriums, Groups and Teachers to SharedPreferences
-                sharedPreferences = getPreferences(MODE_PRIVATE);
+                sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mainActivityContext);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
+
                 editor.putString(AUDITORIUMS_KEY, serializedAuditoriums);
                 editor.putString(GROUPS_KEY, serializedGroups);
                 editor.putString(TEACHERS_KEY, serializedTeachers);
                 editor.apply();
+                Log.d(TAG, "Parse PREF: " + sharedPreferences.getString(AUDITORIUMS_KEY, ""));
 
                 return true;
 
             } catch (IOException e) {
                 e.printStackTrace();
+
+                Log.d(TAG, "CONNECTION ERROR!");
 
                 return false;
             }
@@ -645,7 +481,9 @@ public class MainActivity extends TabActivity {
         @Override
         protected void onPostExecute(Boolean result) {
             readDataFromSharedPreferences();
-            filterDataWithQuery(searchQuery);
+
+            filterDataWithQuery();
+
             setAdapterByContent();
 
         }

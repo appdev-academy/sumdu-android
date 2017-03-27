@@ -3,18 +3,30 @@ package igor.scheduleSumDU;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.v4.app.NavUtils;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -22,6 +34,7 @@ import com.google.gson.reflect.TypeToken;
 import org.json.JSONArray;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
@@ -36,20 +49,20 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.T;
+
 public class ContentActivity extends Activity {
 
     String TAG = "ContentActivity";
 
-    SharedPreferences sharedPreferencesContent;
+    public SharedPreferences sharedPreferencesContent;
 
-    private ListView contentListView;
-
-    private ArrayList<ListContentObject> content;
-    private ArrayList<ListContentObject> output;
-
-    final String CONTENT_KEY = "CONTENT_KEY";
+    public ArrayList<ListContentObject> content;
 
     private int connectionStatus;
+
+    public Context contentContext;
 
     ProgressDialog progress;
 
@@ -59,50 +72,77 @@ public class ContentActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.custom_list_view);
 
+        DataManager dataManager = DataManager.getInstance();
+        dataManager.context = getApplicationContext();
+        contentContext = getApplicationContext();
+
         progressDialog();
 
         // Setting actionBar with "Back" button
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 
+        getActionBar().setIcon(
+                new ColorDrawable(ContextCompat.getColor(this, android.R.color.transparent)));
+
         // Getting title from pressed element for using as activity title
         Intent intent = getIntent();
         setTitle(intent.getStringExtra("content_title"));
-        connectionStatus = intent.getIntExtra("connectionStatus", connectionStatus);
-        Log.d(TAG, "CONNECTION" + connectionStatus);
+        Log.d(TAG, "INTENT:" + intent);
 
-        if (connectionStatus == 0) {
-            readDataFromSharedPreferences();
-            setContentListView();
-            progress.dismiss();
+//        if (checkConnection() == 0) {
 
-        } else {
+        new ParseTask().execute();
 
-            new ParseTask().execute();
-        }
+//            content = dataManager.readDataFromSharedPreferences(intent);
+//            setContentListView();
+//            progress.dismiss();
 
+//        } else {
 
 
+//        }
+
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+//        MenuInflater inflater = getMenuInflater();
+//        inflater.inflate(R.menu.search, menu);
+//        MenuItem item = menu.findItem(R.id.menu_search);
+
+        getMenuInflater().inflate(R.menu.menu_content_activity, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
     // Activating "Back" button
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        Intent myIntent = new Intent(getApplicationContext(), MainActivity.class);
-        startActivityForResult(myIntent, 0);
-        return true;
+        switch (item.getItemId()) {
+
+            case android.R.id.home:
+
+                Intent homeIntent = new Intent(this, MainActivity.class);
+                homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(homeIntent);
+                return true;
+
+            case R.id.refresh_button:
+
+                    progressDialog();
+                    new ParseTask().execute();
+
+                return true;
+
+
+        }
+        return super.onOptionsItemSelected(item);
     }
 
-    // Getting data from sharedpreferences by "content_title"
-    private void readDataFromSharedPreferences() {
-        sharedPreferencesContent = getPreferences(MODE_PRIVATE);
-        Intent intent = getIntent();
-        String fetchResult = sharedPreferencesContent.getString(intent.getStringExtra("content_title"), "");
-        content = parseStringToArrayList(fetchResult);
 
-    }
-
-    // Seting up and starting progress dialog
+    // Setting up and starting progress dialog
     public void progressDialog() {
         progress = new ProgressDialog(this);
         progress.setTitle("Загрузка");
@@ -111,13 +151,6 @@ public class ContentActivity extends Activity {
         progress.show();
     }
 
-    private ArrayList<ListContentObject> parseStringToArrayList(String stringToParse) {
-        Type itemsListType = new TypeToken<List<ListContentObject>>(){}.getType();
-        ArrayList<ListContentObject> contentRecords = new Gson().fromJson(stringToParse, itemsListType);
-        Collections.sort(contentRecords, new ListContentObjectComparator());
-
-        return contentRecords;
-    }
 
     // Setting listview considering to chosen element
     private void setContentListView() {
@@ -187,6 +220,7 @@ public class ContentActivity extends Activity {
             }
         }
 
+
         String[] dateMatch = new String[content.size()];
         for(int i = 0; i < content.size()-1; i++){
             if(dateFormatter.format(content.get(i).fullDate) != null) {
@@ -213,30 +247,31 @@ public class ContentActivity extends Activity {
                 linLayout.addView(dayItem);
             }
 
-                if (dateFormatter.format(content.get(i).fullDate).equals(dateMatch[i]) && pairTitle[i] != null) {
+            if (dateFormatter.format(content.get(i).fullDate).equals(dateMatch[i]) && pairTitle[i] != null) {
 
-                    View item = ltInflater.inflate(R.layout.item, linLayout, false);
-                    TextView tvPairTitleAndType = (TextView) item.findViewById(R.id.tvPairTitleAndPairType);
+                View item = ltInflater.inflate(R.layout.item, linLayout, false);
+                TextView tvPairTitleAndType = (TextView) item.findViewById(R.id.tvPairTitleAndPairType);
 
-                    if (pairType[i].trim().length() <= 1) {
-                        tvPairTitleAndType.setText(pairTitle[i]);
-                    } else tvPairTitleAndType.setText(pairTitle[i] + " (" + pairType[i] + ")");
+                if (pairType[i].trim().length() <= 1) {
+                    tvPairTitleAndType.setText(pairTitle[i]);
+                } else tvPairTitleAndType.setText(pairTitle[i] + " (" + pairType[i] + ")");
 
-                    TextView tvPairTimeAndAuditorium = (TextView) item.findViewById(R.id.tvPairTimeAndAuditorium);
+                TextView tvPairTimeAndAuditorium = (TextView) item.findViewById(R.id.tvPairTimeAndAuditorium);
 
-                    if (auditorium[i].trim().length() <= 1) {
-                        tvPairTimeAndAuditorium.setText(pairTime[i]);
-                    } else tvPairTimeAndAuditorium.setText(pairTime[i] + " *  " + auditorium[i]);
+                if (auditorium[i].trim().length() <= 1) {
+                    tvPairTimeAndAuditorium.setText(pairTime[i]);
+                } else tvPairTimeAndAuditorium.setText(pairTime[i] + "  *  " + auditorium[i]);
 
-                    TextView tvLecturer = (TextView) item.findViewById(R.id.tvLecturer);
-                    tvLecturer.setText(lecturer[i]);
-                    item.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
-                    item.setBackgroundColor(Color.WHITE);
-                    linLayout.addView(item);
+                TextView tvLecturer = (TextView) item.findViewById(R.id.tvLecturer);
+                tvLecturer.setText(lecturer[i]);
+                item.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
+                item.setBackgroundColor(Color.WHITE);
+                linLayout.addView(item);
 //                    Log.d(TAG,"ITEM  " + i);
             }
         }
     }
+
 
     // Parsing and saving gained data into shared preferences
     class ParseTask extends AsyncTask<Void, Void, String> {
@@ -253,7 +288,7 @@ public class ContentActivity extends Activity {
                 Intent intent = getIntent();
                 String downloadURL = intent.getStringExtra("downloadURL");
                 URL url = new URL(downloadURL);
-                Log.d(TAG, "url:" + url);
+                Log.d(TAG, "downloadURL: " + downloadURL);
 
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
@@ -273,17 +308,18 @@ public class ContentActivity extends Activity {
 
 
             } catch(Exception e){
+                Log.d(TAG, "WTF!");
+
                 e.printStackTrace();
             }
 
-            sharedPreferencesContent = getPreferences(MODE_PRIVATE);
+            sharedPreferencesContent = PreferenceManager.getDefaultSharedPreferences(contentContext);
             SharedPreferences.Editor editor = sharedPreferencesContent.edit();
 
 
             try {
                 JSONArray jsonArray = new JSONArray(resultJson);
                 ArrayList<ListContentObject> contentRecords = new ArrayList<ListContentObject>();
-
 
                 DateFormat parser = new SimpleDateFormat("dd.MM.yyyy kk:mm");
 
@@ -315,7 +351,6 @@ public class ContentActivity extends Activity {
                 Intent intent = getIntent();
                 editor.putString(intent.getStringExtra("content_title"), jsonContentString);
                 editor.apply();
-                Log.d(TAG, "sharedPreferencesContent:" + sharedPreferencesContent.getString(intent.getStringExtra("content_title"), ""));
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -331,11 +366,15 @@ public class ContentActivity extends Activity {
         @Override
         protected void onPostExecute(String stringJson) {
             super.onPostExecute(stringJson);
+            DataManager dataManager = DataManager.getInstance();
+            Intent intent = getIntent();
 
-            readDataFromSharedPreferences();
+            content = dataManager.readDataFromSharedPreferences(intent);
             setContentListView();
             progress.dismiss();
-
+            Toast.makeText(getApplicationContext(),
+                            "Розклад оновлено.", Toast.LENGTH_LONG).show();
+            Log.d(TAG, "Refreshed");
         }
     }
 
