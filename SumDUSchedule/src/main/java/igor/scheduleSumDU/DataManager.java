@@ -57,7 +57,44 @@ public class DataManager {
     }
 
     // Saving elements added to history in sharedPreferences
-    public String saveHistoryToSharedPreferences (String historySaveID, String historySaveTitle, String  historySaveObjectType, ArrayList<ListObject> historyToSave) {
+    public String saveHistoryToSharedPreferences (ArrayList<ListObject> historyToSave) {
+
+        Log.d(TAG, "HISTORYTOSAVE: " + historyToSave);
+
+        Gson gson = new Gson();
+        MainActivity mainActivity = new MainActivity();
+
+        mainActivity.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+//
+//        ListObject historyObject = new ListObject();
+//        historyObject.id = historySaveID;
+//        historyObject.title = historySaveTitle;
+//        historyObject.objectType = historySaveObjectType;
+//
+//        for (int i = 0; i < historyToSave.size(); i++) {
+//            if (historyToSave.toArray()[i].toString().contains(historyObject.title)) {
+//                historyToSave.remove(i);
+//            }
+//            Log.d(TAG, "I:" + i);
+//        }
+//
+//        Collections.reverse(historyToSave);
+//        historyToSave.add(historyObject);
+//        Collections.reverse(historyToSave);
+
+        String jsonHistoryString = gson.toJson(historyToSave);
+
+        SharedPreferences.Editor editor = mainActivity.sharedPreferences.edit();
+        editor.putString(mainActivity.HISTORY_KEY, jsonHistoryString);
+        editor.apply();
+        Log.d(TAG, "SAVE_HISTORY_TO_SPREF: " + jsonHistoryString);
+
+        return jsonHistoryString;
+    }
+
+
+    // Saving elements added to history in sharedPreferences
+    public String saveHistoryToBufferSharedPreferences (String historySaveID, String historySaveTitle, String  historySaveObjectType, ArrayList<ListObject> historyToSave) {
 
         Gson gson = new Gson();
         MainActivity mainActivity = new MainActivity();
@@ -81,9 +118,11 @@ public class DataManager {
         Collections.reverse(historyToSave);
 
         String jsonHistoryString = gson.toJson(historyToSave);
+        Log.d(TAG, "SAVE_HISTORY_FROM_BUFFER:" + jsonHistoryString);
+
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(mainActivity.HISTORY_KEY, jsonHistoryString);
+        editor.putString(mainActivity.BUFFER_KEY, jsonHistoryString);
         editor.apply();
 
         return jsonHistoryString;
@@ -224,6 +263,24 @@ public class DataManager {
         if (mainActivity.sharedPreferences.contains(mainActivity.HISTORY_KEY)) {
             String fetchResult = mainActivity.sharedPreferences.getString(mainActivity.HISTORY_KEY, "");
             history = parseStringToArrayList(fetchResult);
+            Log.d(TAG, "READ_HISTORY_FROM_SPREF:" + history);
+
+        } else {
+            history = new ArrayList<ListObject>();
+        }
+        return history;
+    }
+
+    public ArrayList<ListObject> readHistoryFromBufferSharedPreferences() {
+
+        MainActivity mainActivity = new MainActivity();
+        mainActivity.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        ArrayList<ListObject> history;
+
+        if (mainActivity.sharedPreferences.contains(mainActivity.BUFFER_KEY)) {
+            String fetchResult = mainActivity.sharedPreferences.getString(mainActivity.BUFFER_KEY, "");
+            history = parseStringToArrayList(fetchResult);
+            Log.d(TAG, "READ_HISTORY_FROM_BUFFER:" + history);
 
         } else {
             history = new ArrayList<ListObject>();

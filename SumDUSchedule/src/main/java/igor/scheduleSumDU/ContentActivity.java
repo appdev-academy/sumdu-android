@@ -47,20 +47,13 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 
-import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
-import static android.icu.lang.UCharacter.GraphemeClusterBreak.T;
 
 public class ContentActivity extends Activity {
 
     String TAG = "ContentActivity";
 
     public SharedPreferences sharedPreferencesContent;
-
-    public ArrayList<ListContentObject> content;
-
-    private int connectionStatus;
 
     public Context contentContext;
 
@@ -90,27 +83,15 @@ public class ContentActivity extends Activity {
         setTitle(intent.getStringExtra("content_title"));
         Log.d(TAG, "INTENT:" + intent);
 
-//        if (checkConnection() == 0) {
-
         new ParseTask().execute();
-
-//            content = dataManager.readDataFromSharedPreferences(intent);
-//            setContentListView();
-//            progress.dismiss();
-
-//        } else {
-
-
-//        }
+//        setContentListView(dataManager.readDataFromSharedPreferences(intent));
 
     }
 
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-//        MenuInflater inflater = getMenuInflater();
-//        inflater.inflate(R.menu.search, menu);
-//        MenuItem item = menu.findItem(R.id.menu_search);
+
 
         getMenuInflater().inflate(R.menu.menu_content_activity, menu);
         return super.onCreateOptionsMenu(menu);
@@ -124,9 +105,7 @@ public class ContentActivity extends Activity {
 
             case android.R.id.home:
 
-                Intent homeIntent = new Intent(this, MainActivity.class);
-                homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(homeIntent);
+                homeIntent();
                 return true;
 
             case R.id.refresh_button:
@@ -135,8 +114,6 @@ public class ContentActivity extends Activity {
                     new ParseTask().execute();
 
                 return true;
-
-
         }
         return super.onOptionsItemSelected(item);
     }
@@ -144,44 +121,50 @@ public class ContentActivity extends Activity {
 
     // Setting up and starting progress dialog
     public void progressDialog() {
-        progress = new ProgressDialog(this);
-        progress.setTitle("Загрузка");
-        progress.setMessage("Получение данных");
-        progress.setCanceledOnTouchOutside(false);
-        progress.show();
+//        this.runOnUiThread(new Runnable() {
+//
+//            @Override
+//            public void run() {
+                progress = new ProgressDialog(ContentActivity.this);
+                progress.setTitle("Загрузка");
+                progress.setMessage("Отримання даных");
+                progress.setCanceledOnTouchOutside(false);
+                progress.show();
+//            }
+//        });
     }
 
 
     // Setting listview considering to chosen element
-    private void setContentListView() {
+    private void setContentListView(ArrayList<ListContentObject> inputContent) {
 
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
         SimpleDateFormat timeFormatter = new SimpleDateFormat("kk:mm");
 
-        String[] pairTitle = new String[content.size()];
-        for(int i = 0; i < content.size()-1; i++){
-            if (content.get(i).pairTitle != null) {
-                pairTitle[i] = content.get(i).pairTitle;
+        String[] pairTitle = new String[inputContent.size()];
+        for(int i = 0; i < inputContent.size(); i++){
+            if (inputContent.get(i).pairTitle != null) {
+                pairTitle[i] = inputContent.get(i).pairTitle;
 //                Log.d(TAG, "PAIR_TITLE:" + content.get(i).pairTitle);
             }
         }
 
-        String[] pairType = new String[content.size()];
-        for(int i = 0; i < content.size()-1; i++){
-            if (content.get(i).pairType != null) {
-                pairType[i] = content.get(i).pairType;
+        String[] pairType = new String[inputContent.size()];
+        for(int i = 0; i < inputContent.size(); i++){
+            if (inputContent.get(i).pairType != null) {
+                pairType[i] = inputContent.get(i).pairType;
             }
         }
 
-        String[] pairTime = new String[content.size()];
-        for(int i = 0; i < content.size()-1; i++){
-            if (timeFormatter.format(content.get(i).fullDate) != null) {
+        String[] pairTime = new String[inputContent.size()];
+        for(int i = 0; i < inputContent.size(); i++){
+            if (timeFormatter.format(inputContent.get(i).fullDate) != null) {
                 try {
-                    Date date = timeFormatter.parse(timeFormatter.format(content.get(i).fullDate));
+                    Date date = timeFormatter.parse(timeFormatter.format(inputContent.get(i).fullDate));
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTime(date);
                     calendar.add(Calendar.MINUTE, 80);
-                    String pairBeginingAndEnding = (timeFormatter.format(content.get(i).fullDate) + " - " + timeFormatter.format(calendar.getTime()));
+                    String pairBeginingAndEnding = (timeFormatter.format(inputContent.get(i).fullDate) + " - " + timeFormatter.format(calendar.getTime()));
                     pairTime[i] = pairBeginingAndEnding;
 
                 } catch (ParseException e) {
@@ -190,46 +173,47 @@ public class ContentActivity extends Activity {
             }
         }
 
-        String[] auditorium = new String[content.size()];
-        for(int i = 0; i < content.size()-1; i++){
-            if (content.get(i).auditorium != null) {
-                auditorium[i] = content.get(i).auditorium;
+        String[] auditorium = new String[inputContent.size()];
+        for(int i = 0; i < inputContent.size(); i++){
+            if (inputContent.get(i).auditorium != null) {
+                auditorium[i] = inputContent.get(i).auditorium;
             }
         }
 
-        String[] lecturer = new String[content.size()];
-        for(int i = 0; i < content.size()-1; i++){
-            if (content.get(i).lecturer != null) {
-                lecturer[i] = content.get(i).lecturer;
+        String[] lecturer = new String[inputContent.size()];
+        for(int i = 0; i < inputContent.size(); i++){
+            if (inputContent.get(i).lecturer != null) {
+                lecturer[i] = inputContent.get(i).lecturer;
             }
         }
 
-        String[] dayOfTheWeek = new String[content.size()];
-        String[] date = new String[content.size()];
-        for(int i = 0; i < content.size()-1; i++){
-            if(dateFormatter.format(content.get(i).fullDate) != null && i == 0) {
-                date[i] = dateFormatter.format(content.get(i).fullDate);
+        String[] dayOfTheWeek = new String[inputContent.size()];
+        String[] date = new String[inputContent.size()];
+        for(int i = 0; i < inputContent.size(); i++){
+            if(dateFormatter.format(inputContent.get(i).fullDate) != null && i == 0) {
+                date[i] = dateFormatter.format(inputContent.get(i).fullDate);
 //                Log.d(TAG, "DATE:" + date[i]);
-                dayOfTheWeek[i] = content.get(i).dayOfTheWeek;
+                dayOfTheWeek[i] = inputContent.get(i).dayOfTheWeek;
             } else
 
-            if (dateFormatter.format(content.get(i).fullDate) != null && !dateFormatter.format(content.get(i).fullDate).equals(dateFormatter.format(content.get(i-1).fullDate))) {
-                date[i] = dateFormatter.format(content.get(i).fullDate);
-                dayOfTheWeek[i] = content.get(i).dayOfTheWeek;
+            if (dateFormatter.format(inputContent.get(i).fullDate) != null && !dateFormatter.format(inputContent.get(i).fullDate).equals(dateFormatter.format(inputContent.get(i-1).fullDate))) {
+                date[i] = dateFormatter.format(inputContent.get(i).fullDate);
+                dayOfTheWeek[i] = inputContent.get(i).dayOfTheWeek;
 //                Log.d(TAG, "DATE:" + date[i]);
             }
         }
 
 
-        String[] dateMatch = new String[content.size()];
-        for(int i = 0; i < content.size()-1; i++){
-            if(dateFormatter.format(content.get(i).fullDate) != null) {
-                dateMatch[i] = dateFormatter.format(content.get(i).fullDate);
+        String[] dateMatch = new String[inputContent.size()];
+        for(int i = 0; i < inputContent.size(); i++){
+            if(dateFormatter.format(inputContent.get(i).fullDate) != null) {
+                dateMatch[i] = dateFormatter.format(inputContent.get(i).fullDate);
 //                Log.d(TAG, "DATE_MATCH:" + dateMatch[i]);
             }
         }
 
         LinearLayout linLayout = (LinearLayout) findViewById(R.id.linLayout);
+        linLayout.removeAllViews();
         LayoutInflater ltInflater = getLayoutInflater();
 
         for (int i = 0; i < date.length; i++) {
@@ -247,7 +231,7 @@ public class ContentActivity extends Activity {
                 linLayout.addView(dayItem);
             }
 
-            if (dateFormatter.format(content.get(i).fullDate).equals(dateMatch[i]) && pairTitle[i] != null) {
+            if (dateFormatter.format(inputContent.get(i).fullDate).equals(dateMatch[i]) && pairTitle[i] != null) {
 
                 View item = ltInflater.inflate(R.layout.item, linLayout, false);
                 TextView tvPairTitleAndType = (TextView) item.findViewById(R.id.tvPairTitleAndPairType);
@@ -272,6 +256,14 @@ public class ContentActivity extends Activity {
         }
     }
 
+    private void homeIntent() {
+
+        Intent homeIntent = new Intent(this, MainActivity.class);
+        homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(homeIntent);
+
+    }
+
 
     // Parsing and saving gained data into shared preferences
     class ParseTask extends AsyncTask<Void, Void, String> {
@@ -279,6 +271,7 @@ public class ContentActivity extends Activity {
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
         String resultJson = "";
+        String result = null;
 
         @Override
         protected String doInBackground(Void... params) {
@@ -305,10 +298,21 @@ public class ContentActivity extends Activity {
                 }
                 resultJson = buffer.toString();
 
-
+                result = "Success";
 
             } catch(Exception e){
                 Log.d(TAG, "WTF!");
+
+                result = null;
+
+                progress.dismiss();
+
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(getApplicationContext(),
+                                "Не вдалося оновити розклад. Немає інтернет підключення.", Toast.LENGTH_LONG).show();
+                    }
+                });
 
                 e.printStackTrace();
             }
@@ -318,6 +322,7 @@ public class ContentActivity extends Activity {
 
 
             try {
+
                 JSONArray jsonArray = new JSONArray(resultJson);
                 ArrayList<ListContentObject> contentRecords = new ArrayList<ListContentObject>();
 
@@ -352,29 +357,64 @@ public class ContentActivity extends Activity {
                 editor.putString(intent.getStringExtra("content_title"), jsonContentString);
                 editor.apply();
 
+                result = "Success";
+
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.d(TAG, "JSONException:");
 
+                result = null;
+
+//                runOnUiThread(new Runnable() {
+//                    public void run() {
+//                        Toast.makeText(getApplicationContext(),
+//                                "А этого быть не должно:)", Toast.LENGTH_LONG).show();
+//                    }
+//                });
+
             }
 
-            return resultJson;
+            return result;
         }
 
 
 
         @Override
-        protected void onPostExecute(String stringJson) {
-            super.onPostExecute(stringJson);
-            DataManager dataManager = DataManager.getInstance();
-            Intent intent = getIntent();
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
 
-            content = dataManager.readDataFromSharedPreferences(intent);
-            setContentListView();
-            progress.dismiss();
-            Toast.makeText(getApplicationContext(),
-                            "Розклад оновлено.", Toast.LENGTH_LONG).show();
-            Log.d(TAG, "Refreshed");
+            if (result != null) {
+                Log.d(TAG, "onPostExecute!");
+
+                DataManager dataManager = DataManager.getInstance();
+                Intent intent = getIntent();
+
+                dataManager.saveHistoryToSharedPreferences(dataManager.readHistoryFromBufferSharedPreferences());
+                setContentListView(dataManager.readDataFromSharedPreferences(intent));
+                progress.dismiss();
+                Toast.makeText(getApplicationContext(),
+                        "Розклад оновлено", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Refreshed");
+            } else {
+                Log.d(TAG, "ELSE");
+                MainActivity mainActivity = new MainActivity();
+                mainActivity.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(contentContext);
+                DataManager dataManager = DataManager.getInstance();
+                Intent intent = getIntent();
+
+
+                if (mainActivity.sharedPreferences.getString(mainActivity.HISTORY_KEY, "").contains(intent.getStringExtra("content_title"))) {
+
+                    dataManager.saveHistoryToSharedPreferences(dataManager.readHistoryFromBufferSharedPreferences());
+                    setContentListView(dataManager.readDataFromSharedPreferences(intent));
+                    progress.dismiss();
+                    
+                } else {
+
+                    homeIntent();
+                    progress.dismiss();
+                }
+            }
         }
     }
 
