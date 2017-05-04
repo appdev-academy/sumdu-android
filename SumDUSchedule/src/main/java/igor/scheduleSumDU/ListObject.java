@@ -6,6 +6,7 @@ public class ListObject {
     public String id = "";
     public String title = "";
     public String objectType = "";
+    
     ListObject() {}
 
     @Override

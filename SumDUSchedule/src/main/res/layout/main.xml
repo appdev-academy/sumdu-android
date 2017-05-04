@@ -2,7 +2,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
+
+    <!--<include-->
+        <!--layout="@layout/toolbar"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--/>-->
 
     <TabHost
         android:id="@android:id/tabhost"
@@ -17,7 +24,9 @@
             <TabWidget
                 android:id="@android:id/tabs"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+
+                android:background="@color/backgroundWhite">
             </TabWidget>
 
             <FrameLayout
@@ -28,6 +37,7 @@
                 <ListView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:background="@color/backgroundWhite"
                     android:id="@+id/lvContent" />
             </FrameLayout>
         </LinearLayout>

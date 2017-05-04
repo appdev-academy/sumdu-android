@@ -47,6 +47,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Locale;
+
+import static igor.scheduleSumDU.R.id.tvPairTimeAndAuditorium;
+import static igor.scheduleSumDU.R.layout.item;
 
 
 public class ContentActivity extends Activity {
@@ -56,6 +60,8 @@ public class ContentActivity extends Activity {
     public SharedPreferences sharedPreferencesContent;
 
     public Context contentContext;
+
+    private SimpleDateFormat dateFormatForMonth = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     ProgressDialog progress;
 
@@ -127,7 +133,7 @@ public class ContentActivity extends Activity {
 //            public void run() {
                 progress = new ProgressDialog(ContentActivity.this);
                 progress.setTitle("Загрузка");
-                progress.setMessage("Отримання даных");
+                progress.setMessage("Отримання даних");
                 progress.setCanceledOnTouchOutside(false);
                 progress.show();
 //            }
@@ -138,8 +144,14 @@ public class ContentActivity extends Activity {
     // Setting listview considering to chosen element
     private void setContentListView(ArrayList<ListContentObject> inputContent) {
 
+        Locale locale = new Locale("uk", "UK");
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
+        SimpleDateFormat dateFormatterForMonth = new SimpleDateFormat("d MMMM", locale);
         SimpleDateFormat timeFormatter = new SimpleDateFormat("kk:mm");
+
+        Intent intent = getIntent();
+        String contentType = intent.getStringExtra("content_type");
+        Log.d(TAG, "content_type: " + contentType);
 
         String[] pairTitle = new String[inputContent.size()];
         for(int i = 0; i < inputContent.size(); i++){
@@ -164,12 +176,19 @@ public class ContentActivity extends Activity {
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTime(date);
                     calendar.add(Calendar.MINUTE, 80);
-                    String pairBeginingAndEnding = (timeFormatter.format(inputContent.get(i).fullDate) + " - " + timeFormatter.format(calendar.getTime()));
-                    pairTime[i] = pairBeginingAndEnding;
+                    String pairBeginningAndEnding = (timeFormatter.format(inputContent.get(i).fullDate) + " - " + timeFormatter.format(calendar.getTime()));
+                    pairTime[i] = pairBeginningAndEnding;
 
                 } catch (ParseException e) {
                     Log.d(TAG, "ParseException");
                 }
+            }
+        }
+
+        String[] group = new String[inputContent.size()];
+        for(int i = 0; i < inputContent.size(); i++){
+            if (inputContent.get(i).group != null) {
+                group[i] = inputContent.get(i).group;
             }
         }
 
@@ -223,11 +242,18 @@ public class ContentActivity extends Activity {
 
             if (i == 0 || date[i] != null) {
 
-                tvDate.setText(date[i]);
+                Log.d(TAG, "Date[i]: " + date[i]);
+                try {
+                    Date dateForMonth = dateFormatter.parse(date[i]);
+                    tvDate.setText(dateFormatterForMonth.format(dateForMonth));
+                } catch (ParseException e) {
+                    Log.d(TAG, "ERROR: " + e);
+                }
+
                 TextView tvDayOfTheWeek = (TextView) dayItem.findViewById(R.id.tvDayOfTheWeek);
                 tvDayOfTheWeek.setText(dayOfTheWeek[i]);
                 dayItem.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
-                dayItem.setBackgroundColor(Color.LTGRAY);
+                dayItem.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.headerColor));
                 linLayout.addView(dayItem);
             }
 
@@ -235,21 +261,56 @@ public class ContentActivity extends Activity {
 
                 View item = ltInflater.inflate(R.layout.item, linLayout, false);
                 TextView tvPairTitleAndType = (TextView) item.findViewById(R.id.tvPairTitleAndPairType);
-
-                if (pairType[i].trim().length() <= 1) {
-                    tvPairTitleAndType.setText(pairTitle[i]);
-                } else tvPairTitleAndType.setText(pairTitle[i] + " (" + pairType[i] + ")");
-
+                TextView tvLecturer = (TextView) item.findViewById(R.id.tvLecturer);
                 TextView tvPairTimeAndAuditorium = (TextView) item.findViewById(R.id.tvPairTimeAndAuditorium);
 
-                if (auditorium[i].trim().length() <= 1) {
-                    tvPairTimeAndAuditorium.setText(pairTime[i]);
-                } else tvPairTimeAndAuditorium.setText(pairTime[i] + "  *  " + auditorium[i]);
+                if (pairType[i].trim().length() <= 1) {
+                        tvPairTitleAndType.setText(pairTitle[i]);
+                    } else tvPairTitleAndType.setText(pairTitle[i] + "\n(" + pairType[i] + ")");
 
-                TextView tvLecturer = (TextView) item.findViewById(R.id.tvLecturer);
-                tvLecturer.setText(lecturer[i]);
+                if (contentType.equals("id_grp")) {
+                    if (auditorium[i].trim().length() > 1 && pairTime[i].trim().length() > 1) {
+                        tvPairTimeAndAuditorium.setText(pairTime[i] + "  *  " + auditorium[i]);
+                    } else if (auditorium[i].trim().length() <= 1 && pairTime[i].trim().length() > 1) {
+                        tvPairTimeAndAuditorium.setText(pairTime[i]);
+                    } else if (auditorium[i].trim().length() <= 1 && pairTime[i].trim().length() <= 1) {
+                        tvPairTimeAndAuditorium.setText("");
+                    } else if (auditorium[i].trim().length() > 1 && pairTime[i].trim().length() <= 1) {
+                        tvPairTimeAndAuditorium.setText(auditorium[i]);
+                    }
+                    tvLecturer.setText(lecturer[i]);
+                }
+
+                if (contentType.equals("id_aud")) {
+                    if (group[i].trim().length() > 1 && pairTime[i].trim().length() > 1) {
+                        tvPairTimeAndAuditorium.setText(pairTime[i] + "  *  " + group[i]);
+                    } else if (group[i].trim().length() <= 1 && pairTime[i].trim().length() > 1) {
+                        tvPairTimeAndAuditorium.setText(pairTime[i]);
+                    } else if (group[i].trim().length() <= 1 && pairTime[i].trim().length() <= 1) {
+                        tvPairTimeAndAuditorium.setText("");
+                    } else if (group[i].trim().length() > 1 && pairTime[i].trim().length() <= 1) {
+                        tvPairTimeAndAuditorium.setText(group[i]);
+                    }
+                    tvLecturer.setText(lecturer[i]);
+                }
+
+                if (contentType.equals("id_fio")) {
+                    if (auditorium[i].trim().length() > 1 && pairTime[i].trim().length() > 1) {
+                        tvPairTimeAndAuditorium.setText(pairTime[i] + "  *  " + auditorium[i]);
+                    } else if (auditorium[i].trim().length() <= 1 && pairTime[i].trim().length() <= 1) {
+                        tvPairTimeAndAuditorium.setText("");
+                    } else if (auditorium[i].trim().length() <= 1 && pairTime[i].trim().length() > 1) {
+                        tvPairTimeAndAuditorium.setText(pairTime[i]);
+                    } else if (auditorium[i].trim().length() > 1 && pairTime[i].trim().length() <= 1) {
+                        tvPairTimeAndAuditorium.setText(auditorium[i]);
+                    }
+                    if(group[i].trim().length() > 1) {
+                        tvLecturer.setText("Для " + group[i]);
+                    } else tvLecturer.setText("");
+                }
+
                 item.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
-                item.setBackgroundColor(Color.WHITE);
+                item.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.backgroundWhite));
                 linLayout.addView(item);
 //                    Log.d(TAG,"ITEM  " + i);
             }
@@ -301,7 +362,6 @@ public class ContentActivity extends Activity {
                 result = "Success";
 
             } catch(Exception e){
-                Log.d(TAG, "WTF!");
 
                 result = null;
 
@@ -365,13 +425,6 @@ public class ContentActivity extends Activity {
 
                 result = null;
 
-//                runOnUiThread(new Runnable() {
-//                    public void run() {
-//                        Toast.makeText(getApplicationContext(),
-//                                "А этого быть не должно:)", Toast.LENGTH_LONG).show();
-//                    }
-//                });
-
             }
 
             return result;
@@ -384,7 +437,6 @@ public class ContentActivity extends Activity {
             super.onPostExecute(result);
 
             if (result != null) {
-                Log.d(TAG, "onPostExecute!");
 
                 DataManager dataManager = DataManager.getInstance();
                 Intent intent = getIntent();

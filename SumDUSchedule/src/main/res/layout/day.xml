@@ -7,10 +7,9 @@
         android:id="@+id/tvDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TextView"
         android:layout_gravity="center_vertical|start"
         android:textSize="16sp"
-        android:textColor="@android:color/black"
+        android:textColor="@color/primaryTextColor"
         android:layout_marginLeft="10dp"
         android:layout_marginBottom="1dp">
     </TextView>
@@ -18,10 +17,9 @@
         android:id="@+id/tvDayOfTheWeek"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TextView"
         android:layout_gravity="center_vertical|end"
         android:textSize="14sp"
-        android:textColor="@android:color/black"
+        android:textColor="@color/lightTextColor"
         android:layout_marginRight="10dp"
         android:layout_marginBottom="1dp">
     </TextView>

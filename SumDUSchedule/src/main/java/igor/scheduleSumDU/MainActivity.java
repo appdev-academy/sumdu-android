@@ -6,12 +6,18 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
@@ -82,8 +88,6 @@ public class MainActivity extends TabActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        Log.d(TAG, "ONCREATE!");
-
         DataManager dataManager = DataManager.getInstance();
         dataManager.context = getApplicationContext();
         mainActivityContext = getApplicationContext();
@@ -92,6 +96,10 @@ public class MainActivity extends TabActivity {
 
         setOnItemClickListener();
         listView.setLongClickable(true);
+
+//        SpannableString s = new SpannableString("Hello");
+//        s.setSpan(new ForegroundColorSpan(Color.GREEN), 0, "Hello".length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+//        getSupportActionBar().setTitle(s);
 
         getActionBar().setIcon(
                 new ColorDrawable(ContextCompat.getColor(this, android.R.color.transparent)));
@@ -324,7 +332,7 @@ public class MainActivity extends TabActivity {
                 Date endDate = calendar.getTime();
 
                 String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
-
+                Log.d(TAG, "contentID: "  + contentID);
                 if (downloadURL != null) {
                     intentToContentActivity(contentID, chosenID, startDate, endDate);
                 } else Toast.makeText(getApplicationContext(),
@@ -347,7 +355,6 @@ public class MainActivity extends TabActivity {
         });
     }
 
-
     // Intent to new Activity
     private void intentToContentActivity(String contentID, String chosenID, Date startDate, Date endDate) {
 
@@ -355,11 +362,11 @@ public class MainActivity extends TabActivity {
         Intent intent = new Intent(this, ContentActivity.class);
         intent.putExtra("downloadURL", downloadURL);
         intent.putExtra("content_title", content_title);
+        intent.putExtra("content_type", contentID);
         startActivity(intent);
         Log.d(TAG, "Status: " + "GO!");
 
     }
-
 
     // Building up URL for server connectionStatus
     private String scheduleURLFor(String contentID, String chosenID, Date startDate, Date endDate) {
