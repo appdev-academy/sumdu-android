@@ -11,6 +11,7 @@
 
     <style name="MyActionBar" parent="@android:style/Widget.Holo.Light.ActionBar">
         <item name="android:background">@color/backgroundWhite</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
 
 </resources>

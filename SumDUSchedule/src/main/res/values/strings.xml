@@ -8,4 +8,7 @@
     <string name="cancel">Відміна</string>
     <string name="body_text">Оберіть дію над вмістом збереженим в історії:</string>
     <string name="history">Історія</string>
+
+    <string name="empty_history_text1">Історія порожня</string>
+    <string name="empty_history_text2">Гортайте вкладки щоб переміщатися між основними розділами та шукати розклад</string>
 </resources>

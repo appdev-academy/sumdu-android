@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -24,8 +25,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TabHost;
@@ -43,6 +46,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+
+import static android.R.id.list;
 
 
 public class MainActivity extends TabActivity {
@@ -65,6 +70,7 @@ public class MainActivity extends TabActivity {
     private SearchView searchView;
     private ListView listView;
     private TabHost tabHost;
+
     public String searchQuery = "";
     private String content_title = null;
 
@@ -86,20 +92,27 @@ public class MainActivity extends TabActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+            setContentView(R.layout.main);
+
+        boolean tabletSize = getResources().getBoolean(R.bool.isTablet);
+        if (tabletSize) {
+            setContentView(R.layout.tablet_main);
+            Log.d(TAG, "isTABLET");
+//            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+        } else {
+            setContentView(R.layout.main);
+            Log.d(TAG, "isPHONE");
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+        }
+
+        listView = (ListView) findViewById(R.id.lvContent);
 
         DataManager dataManager = DataManager.getInstance();
         dataManager.context = getApplicationContext();
         mainActivityContext = getApplicationContext();
 
-        listView = (ListView) findViewById(R.id.lvContent);
-
         setOnItemClickListener();
         listView.setLongClickable(true);
-
-//        SpannableString s = new SpannableString("Hello");
-//        s.setSpan(new ForegroundColorSpan(Color.GREEN), 0, "Hello".length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-//        getSupportActionBar().setTitle(s);
 
         getActionBar().setIcon(
                 new ColorDrawable(ContextCompat.getColor(this, android.R.color.transparent)));
@@ -157,6 +170,10 @@ public class MainActivity extends TabActivity {
     // Adding tab bar
     public void setupTabBar() {
 
+        ImageView historyImage = (ImageView) findViewById(R.id.history_image);
+        TextView emptyHistoryText1 = (TextView) findViewById(R.id.empty_history_text1);
+        TextView emptyHistoryText2 = (TextView) findViewById(R.id.empty_history_text2);
+
         tabHost = (TabHost) findViewById(android.R.id.tabhost);
         // initialization
         tabHost.setup();
@@ -165,7 +182,14 @@ public class MainActivity extends TabActivity {
 
         tabSpec = tabHost.newTabSpec("history");
         tabSpec.setIndicator("", getResources().getDrawable(R.drawable.tab_icon_selector));
+
         tabSpec.setContent(R.id.lvContent);
+
+        historyImage.setVisibility(View.GONE);
+        listView.setEmptyView(historyImage);
+        listView.setEmptyView(emptyHistoryText1);
+        listView.setEmptyView(emptyHistoryText2);
+
         tabHost.addTab(tabSpec);
 
         // adding tab and defining tag
@@ -187,17 +211,34 @@ public class MainActivity extends TabActivity {
         tabSpec.setContent(R.id.lvContent);
         tabHost.addTab(tabSpec);
 
-        TextView textView1 = (TextView) tabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title);
-        textView1.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size));
-        tabHost.getTabWidget().getChildAt(1).getLayoutParams().width = 50;
+        boolean tabletSize = getResources().getBoolean(R.bool.isTablet);
+        if (tabletSize) {
+            TextView textView1 = (TextView) tabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title);
+            textView1.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size_tablet));
+            tabHost.getTabWidget().getChildAt(1).getLayoutParams().width = 185;
 
-        TextView textView2 = (TextView) tabHost.getTabWidget().getChildAt(2).findViewById(android.R.id.title);
-        textView2.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size));
-        tabHost.getTabWidget().getChildAt(2).getLayoutParams().width = 50;
+            TextView textView2 = (TextView) tabHost.getTabWidget().getChildAt(2).findViewById(android.R.id.title);
+            textView2.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size_tablet));
+            tabHost.getTabWidget().getChildAt(2).getLayoutParams().width = 185;
 
-        TextView textView3 = (TextView) tabHost.getTabWidget().getChildAt(3).findViewById(android.R.id.title);
-        textView3.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size));
-        tabHost.getTabWidget().getChildAt(3).getLayoutParams().width = 50;
+            TextView textView3 = (TextView) tabHost.getTabWidget().getChildAt(3).findViewById(android.R.id.title);
+            textView3.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size_tablet));
+            tabHost.getTabWidget().getChildAt(3).getLayoutParams().width = 185;
+        } else {
+            TextView textView1 = (TextView) tabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title);
+            textView1.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size_phone));
+            tabHost.getTabWidget().getChildAt(1).getLayoutParams().width = 50;
+
+            TextView textView2 = (TextView) tabHost.getTabWidget().getChildAt(2).findViewById(android.R.id.title);
+            textView2.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size_phone));
+            tabHost.getTabWidget().getChildAt(2).getLayoutParams().width = 50;
+
+            TextView textView3 = (TextView) tabHost.getTabWidget().getChildAt(3).findViewById(android.R.id.title);
+            textView3.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size_phone));
+            tabHost.getTabWidget().getChildAt(3).getLayoutParams().width = 50;
+        }
+
+
 
         // This tab will be chosen as default
         tabHost.setCurrentTab(1);
@@ -280,7 +321,7 @@ public class MainActivity extends TabActivity {
                         chosenID = auditoriums.id;
                         content_title = auditoriums.title;
 
-                            dataManager.saveHistoryToBufferSharedPreferences(auditoriums.id, auditoriums.title, auditoriums.objectType, filteredHistory);
+                        dataManager.saveHistoryToBufferSharedPreferences(auditoriums.id, auditoriums.title, auditoriums.objectType, filteredHistory);
 
                     } catch (Exception e) {
                     }
@@ -292,7 +333,7 @@ public class MainActivity extends TabActivity {
                         chosenID = groups.id;
                         content_title = groups.title;
 
-                            dataManager.saveHistoryToBufferSharedPreferences(groups.id, groups.title, groups.objectType, filteredHistory);
+                        dataManager.saveHistoryToBufferSharedPreferences(groups.id, groups.title, groups.objectType, filteredHistory);
 
                     } catch (Exception e) {
                     }
@@ -304,7 +345,7 @@ public class MainActivity extends TabActivity {
                         chosenID = teachers.id;
                         content_title = teachers.title;
 
-                            dataManager.saveHistoryToBufferSharedPreferences(teachers.id, teachers.title, teachers.objectType, filteredHistory);
+                        dataManager.saveHistoryToBufferSharedPreferences(teachers.id, teachers.title, teachers.objectType, filteredHistory);
 
                     } catch (Exception e) {
                     }

@@ -6,6 +6,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
@@ -71,6 +72,11 @@ public class ContentActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.custom_list_view);
 
+        boolean tabletSize = getResources().getBoolean(R.bool.isTablet);
+        if (!tabletSize) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+        }
+
         DataManager dataManager = DataManager.getInstance();
         dataManager.context = getApplicationContext();
         contentContext = getApplicationContext();
@@ -118,6 +124,11 @@ public class ContentActivity extends Activity {
 
                     progressDialog();
                     new ParseTask().execute();
+
+                return true;
+
+            case R.id.import_button:
+
 
                 return true;
         }
