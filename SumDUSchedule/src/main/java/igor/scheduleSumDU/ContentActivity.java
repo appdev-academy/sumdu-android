@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -96,8 +97,6 @@ public class ContentActivity extends Activity {
         Log.d(TAG, "INTENT:" + intent);
 
         new ParseTask().execute();
-//        setContentListView(dataManager.readDataFromSharedPreferences(intent));
-
     }
 
 

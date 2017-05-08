@@ -14,6 +14,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
 import android.text.Spannable;
@@ -64,12 +65,11 @@ public class MainActivity extends TabActivity {
     final String AUDITORIUMS_KEY = "auditoriums";
     final String HISTORY_KEY = "history";
     final String BUFFER_KEY = "buffer";
-    final String TAB_KEY = "tab";
-
 
     private SearchView searchView;
     private ListView listView;
     private TabHost tabHost;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     public String searchQuery = "";
     private String content_title = null;
@@ -92,7 +92,7 @@ public class MainActivity extends TabActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-            setContentView(R.layout.main);
+        setContentView(R.layout.main);
 
         boolean tabletSize = getResources().getBoolean(R.bool.isTablet);
         if (tabletSize) {
@@ -106,6 +106,7 @@ public class MainActivity extends TabActivity {
         }
 
         listView = (ListView) findViewById(R.id.lvContent);
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_main);
 
         DataManager dataManager = DataManager.getInstance();
         dataManager.context = getApplicationContext();
@@ -117,11 +118,16 @@ public class MainActivity extends TabActivity {
         getActionBar().setIcon(
                 new ColorDrawable(ContextCompat.getColor(this, android.R.color.transparent)));
 
-        new ParseAuditoriumsGroupsTeachers().execute();
+        Bundle intent = getIntent().getExtras();
+        if (!intent.getBoolean("Connection")) {
+            new ParseAuditoriumsGroupsTeachers().execute();
+        }
 
         filterDataWithQuery();
 
         setupTabBar();
+
+        refreshListener();
 
         onLongItemClickListener();
 
@@ -194,7 +200,7 @@ public class MainActivity extends TabActivity {
 
         // adding tab and defining tag
         tabSpec = tabHost.newTabSpec("teachers");
-        // tab pairTitleAndType
+        // tab pairTitleAndType.
         tabSpec.setIndicator("Викладач");
         // specifying component id from FrameLayout to put as filling
         tabSpec.setContent(R.id.lvContent);
@@ -238,8 +244,6 @@ public class MainActivity extends TabActivity {
             tabHost.getTabWidget().getChildAt(3).getLayoutParams().width = 50;
         }
 
-
-
         // This tab will be chosen as default
         tabHost.setCurrentTab(1);
         tabHost.setCurrentTab(0);
@@ -250,13 +254,25 @@ public class MainActivity extends TabActivity {
 
                 filterDataWithQuery();
                 setAdapterByContent();
-
+                refreshListener();
                 onLongItemClickListener();
-//                new ParseAuditoriumsGroupsTeachers().execute();
             }
         });
     }
 
+    private void refreshListener () {
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+
+                if (!tabHost.getCurrentTabTag().equals("history")) {
+
+                    swipeRefreshLayout.setRefreshing(true);
+                    new ParseAuditoriumsGroupsTeachers().execute();
+                } else swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+    }
 
     // Building and calling dialog for "History"
     public void dialog() {
@@ -306,80 +322,83 @@ public class MainActivity extends TabActivity {
 
     // OnItemClickListener for listView elements
     private void setOnItemClickListener () {
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                DataManager dataManager = DataManager.getInstance();
-                String contentID = "";
-                String chosenID = "";
+        if (!swipeRefreshLayout.isRefreshing()) {
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                if (tabHost.getCurrentTab() == 3) {
-                    try {
-                        ListObject auditoriums = filteredAuditoriums.get(position);
-                        auditoriums.objectType = "id_aud";
-                        contentID = auditoriums.objectType;
-                        chosenID = auditoriums.id;
-                        content_title = auditoriums.title;
+                    DataManager dataManager = DataManager.getInstance();
+                    String contentID = "";
+                    String chosenID = "";
 
-                        dataManager.saveHistoryToBufferSharedPreferences(auditoriums.id, auditoriums.title, auditoriums.objectType, filteredHistory);
+                    if (tabHost.getCurrentTab() == 3) {
+                        try {
+                            ListObject auditoriums = filteredAuditoriums.get(position);
+                            auditoriums.objectType = "id_aud";
+                            contentID = auditoriums.objectType;
+                            chosenID = auditoriums.id;
+                            content_title = auditoriums.title;
 
-                    } catch (Exception e) {
+                            dataManager.saveHistoryToBufferSharedPreferences(auditoriums.id, auditoriums.title, auditoriums.objectType, filteredHistory);
+
+                        } catch (Exception e) {
+                        }
+                    } else if (tabHost.getCurrentTab() == 2) {
+                        try {
+                            ListObject groups = filteredGroups.get(position);
+                            groups.objectType = "id_grp";
+                            contentID = groups.objectType;
+                            chosenID = groups.id;
+                            content_title = groups.title;
+
+                            dataManager.saveHistoryToBufferSharedPreferences(groups.id, groups.title, groups.objectType, filteredHistory);
+
+                        } catch (Exception e) {
+                        }
+                    } else if (tabHost.getCurrentTab() == 1) {
+                        try {
+                            ListObject teachers = filteredTeachers.get(position);
+                            teachers.objectType = "id_fio";
+                            contentID = teachers.objectType;
+                            chosenID = teachers.id;
+                            content_title = teachers.title;
+
+                            dataManager.saveHistoryToBufferSharedPreferences(teachers.id, teachers.title, teachers.objectType, filteredHistory);
+
+                        } catch (Exception e) {
+                        }
+                    } else if (tabHost.getCurrentTab() == 0) {
+                        try {
+                            ListObject historyObject = filteredHistory.get(position);
+                            contentID = historyObject.objectType;
+                            chosenID = historyObject.id;
+                            content_title = historyObject.title;
+                            filteredHistory.remove(position);
+
+                            dataManager.saveHistoryToBufferSharedPreferences(historyObject.id, historyObject.title, historyObject.objectType, filteredHistory);
+
+                        } catch (Exception e) {
+                        }
                     }
-                } else if (tabHost.getCurrentTab() == 2) {
-                    try {
-                        ListObject groups = filteredGroups.get(position);
-                        groups.objectType = "id_grp";
-                        contentID = groups.objectType;
-                        chosenID = groups.id;
-                        content_title = groups.title;
 
-                        dataManager.saveHistoryToBufferSharedPreferences(groups.id, groups.title, groups.objectType, filteredHistory);
+                    // Get start fullDate
+                    Date startDate = new Date();
 
-                    } catch (Exception e) {
-                    }
-                } else if  (tabHost.getCurrentTab() == 1) {
-                    try {
-                        ListObject teachers = filteredTeachers.get(position);
-                        teachers.objectType = "id_fio";
-                        contentID = teachers.objectType;
-                        chosenID = teachers.id;
-                        content_title = teachers.title;
+                    // Get end fullDate = start fullDate + 30 days
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTime(startDate);
+                    calendar.add(Calendar.DATE, 30);
+                    Date endDate = calendar.getTime();
 
-                        dataManager.saveHistoryToBufferSharedPreferences(teachers.id, teachers.title, teachers.objectType, filteredHistory);
-
-                    } catch (Exception e) {
-                    }
-                } else if (tabHost.getCurrentTab() == 0) {
-                    try {
-                        ListObject historyObject = filteredHistory.get(position);
-                        contentID = historyObject.objectType;
-                        chosenID = historyObject.id;
-                        content_title = historyObject.title;
-                        filteredHistory.remove(position);
-
-                        dataManager.saveHistoryToBufferSharedPreferences(historyObject.id, historyObject.title, historyObject.objectType, filteredHistory);
-
-                    } catch (Exception e) {
-                    }
+                    String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
+                    Log.d(TAG, "contentID: " + contentID);
+                    if (downloadURL != null) {
+                        intentToContentActivity(contentID, chosenID, startDate, endDate);
+                    } else Toast.makeText(getApplicationContext(),
+                            "Невірне посилання на об'єкт", Toast.LENGTH_LONG).show();
                 }
-
-                // Get start fullDate
-                Date startDate = new Date();
-
-                // Get end fullDate = start fullDate + 30 days
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTime(startDate);
-                calendar.add(Calendar.DATE, 30);
-                Date endDate = calendar.getTime();
-
-                String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
-                Log.d(TAG, "contentID: "  + contentID);
-                if (downloadURL != null) {
-                    intentToContentActivity(contentID, chosenID, startDate, endDate);
-                } else Toast.makeText(getApplicationContext(),
-                        "Невірне посилання на об'єкт", Toast.LENGTH_LONG).show();
-            }
-        });
+            });
+        }
     }
 
     private void onLongItemClickListener() {
@@ -491,6 +510,12 @@ public class MainActivity extends TabActivity {
             } catch (IOException e) {
                 e.printStackTrace();
 
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
+                });
                 Log.d(TAG, "CONNECTION ERROR!");
 
                 return false;
@@ -499,6 +524,7 @@ public class MainActivity extends TabActivity {
 
         @Override
         protected void onPostExecute(Boolean result) {
+            swipeRefreshLayout.setRefreshing(false);
 
             filterDataWithQuery();
             setAdapterByContent();
