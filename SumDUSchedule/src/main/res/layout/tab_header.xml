@@ -10,8 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@color/backgroundWhite"
-        android:maxLines="1"
-        android:textSize="100sp"/>
+        android:textColor="@color/lightTextColor"/>
     <!--android:maxLines="1"-->
     <!--android:textSize="138sp"-->
     <!--autofit:minTextSize="3sp"-->

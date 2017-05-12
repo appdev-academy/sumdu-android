@@ -5,12 +5,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
 
-    <!--<include-->
-    <!--layout="@layout/toolbar"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--/>-->
-
     <TabHost
         android:id="@android:id/tabhost"
         android:layout_width="match_parent"
@@ -63,8 +57,22 @@
                     android:gravity="center"
                     android:layout_gravity="center"
                     android:layout_marginTop="240dp"/>
+
+                <android.support.v4.widget.SwipeRefreshLayout
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:id="@+id/swipe_refresh_main"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ListView
+                        android:id="@+id/lvContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@color/backgroundWhite"
+                        />
+                </android.support.v4.widget.SwipeRefreshLayout>
                 <ListView
-                    android:id="@+id/lvContent"
+                    android:id="@+id/lvHistory"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@color/backgroundWhite"

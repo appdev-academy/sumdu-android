@@ -78,6 +78,13 @@
                      />
                 </android.support.v4.widget.SwipeRefreshLayout>
 
+                <ListView
+                    android:id="@+id/lvHistory"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/backgroundWhite"
+                    />
+
             </FrameLayout>
         </LinearLayout>
     </TabHost>

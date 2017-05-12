@@ -37,8 +37,7 @@ public class DataManager {
     }
 
 
-
-    // METHODS FOR MAINACTIVITY NEXT
+    // METHODS FOR CONTENTACTIVITY NEXT
 
     // Setting up fullDate
     public String dateToString(Date date) {
@@ -61,35 +60,16 @@ public class DataManager {
     // Saving elements added to history in sharedPreferences
     public String saveHistoryToSharedPreferences (ArrayList<ListObject> historyToSave) {
 
-        Log.d(TAG, "HISTORYTOSAVE: " + historyToSave);
-
         Gson gson = new Gson();
         MainActivity mainActivity = new MainActivity();
 
         mainActivity.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-//
-//        ListObject historyObject = new ListObject();
-//        historyObject.id = historySaveID;
-//        historyObject.title = historySaveTitle;
-//        historyObject.objectType = historySaveObjectType;
-//
-//        for (int i = 0; i < historyToSave.size(); i++) {
-//            if (historyToSave.toArray()[i].toString().contains(historyObject.title)) {
-//                historyToSave.remove(i);
-//            }
-//            Log.d(TAG, "I:" + i);
-//        }
-//
-//        Collections.reverse(historyToSave);
-//        historyToSave.add(historyObject);
-//        Collections.reverse(historyToSave);
 
         String jsonHistoryString = gson.toJson(historyToSave);
 
         SharedPreferences.Editor editor = mainActivity.sharedPreferences.edit();
         editor.putString(mainActivity.HISTORY_KEY, jsonHistoryString);
         editor.apply();
-        Log.d(TAG, "SAVE_HISTORY_TO_SPREF: " + jsonHistoryString);
 
         return jsonHistoryString;
     }
@@ -112,7 +92,6 @@ public class DataManager {
             if (historyToSave.toArray()[i].toString().contains(historyObject.title)) {
                 historyToSave.remove(i);
             }
-            Log.d(TAG, "I:" + i);
         }
 
         Collections.reverse(historyToSave);
@@ -120,8 +99,6 @@ public class DataManager {
         Collections.reverse(historyToSave);
 
         String jsonHistoryString = gson.toJson(historyToSave);
-        Log.d(TAG, "SAVE_HISTORY_FROM_BUFFER:" + jsonHistoryString);
-
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(mainActivity.BUFFER_KEY, jsonHistoryString);
@@ -139,7 +116,6 @@ public class DataManager {
         SharedPreferences.Editor editor = mainActivity.sharedPreferences.edit();
         editor.remove(mainActivity.HISTORY_KEY);
         editor.apply();
-
     }
 
     // Deleting one selected element on "History" tab
@@ -150,13 +126,11 @@ public class DataManager {
         mainActivity.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         historyToDelete.remove(elementPosition);
-        Log.d(TAG, "pos: " + elementPosition);
         String jsonHistoryString = gson.toJson(historyToDelete);
         SharedPreferences.Editor editor = mainActivity.sharedPreferences.edit();
         editor.putString(mainActivity.HISTORY_KEY, jsonHistoryString);
         editor.apply();
     }
-
 
     public ArrayList<ListObject> filterAuditoriumsWithQuery(String query,ArrayList<ListObject> filteredAuditoriums, ArrayList<ListObject> unfilteredAuditoriums) {
 
@@ -198,14 +172,12 @@ public class DataManager {
         return filteredHistory;
     }
 
-
     // Parsing Json string to ArrayList Gson
     public ArrayList<ListObject> parseStringToArrayList(String stringToParse) {
         Type itemsListType = new TypeToken<List<ListObject>>(){}.getType();
         ArrayList<ListObject> records = new Gson().fromJson(stringToParse, itemsListType);
         return records;
     }
-
 
     public ArrayList<ListObject> readAuditoriumsFromSharedPreferences() {
 
@@ -216,13 +188,11 @@ public class DataManager {
         if (mainActivity.sharedPreferences.contains(mainActivity.AUDITORIUMS_KEY)) {
             String fetchResult = mainActivity.sharedPreferences.getString(mainActivity.AUDITORIUMS_KEY, "");
             auditoriums = parseStringToArrayList(fetchResult);
-
         } else {
             auditoriums = new ArrayList<ListObject>();
         }
         return auditoriums;
     }
-
 
     public ArrayList<ListObject> readGroupsFromSharedPreferences() {
 
@@ -233,7 +203,6 @@ public class DataManager {
         if (mainActivity.sharedPreferences.contains(mainActivity.GROUPS_KEY)) {
             String fetchResult = mainActivity.sharedPreferences.getString(mainActivity.GROUPS_KEY, "");
             groups = parseStringToArrayList(fetchResult);
-
         } else {
             groups = new ArrayList<ListObject>();
         }
@@ -249,7 +218,6 @@ public class DataManager {
         if (mainActivity.sharedPreferences.contains(mainActivity.TEACHERS_KEY)) {
             String fetchResult = mainActivity.sharedPreferences.getString(mainActivity.TEACHERS_KEY, "");
             teachers = parseStringToArrayList(fetchResult);
-
         } else {
             teachers = new ArrayList<ListObject>();
         }
@@ -282,8 +250,6 @@ public class DataManager {
         if (mainActivity.sharedPreferences.contains(mainActivity.BUFFER_KEY)) {
             String fetchResult = mainActivity.sharedPreferences.getString(mainActivity.BUFFER_KEY, "");
             history = parseStringToArrayList(fetchResult);
-            Log.d(TAG, "READ_HISTORY_FROM_BUFFER:" + history);
-
         } else {
             history = new ArrayList<ListObject>();
         }
@@ -311,8 +277,6 @@ public class DataManager {
 
         content = parseContentStringToArrayList(fetchResult);
 
-
         return content;
     }
-
 }

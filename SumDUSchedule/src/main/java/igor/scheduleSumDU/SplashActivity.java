@@ -37,13 +37,7 @@ public class SplashActivity extends Activity {
             setContentView(R.layout.splash_screen_portrait);
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
         }
-
         new ParseAuditoriumsGroupsTeachers().execute();
-
-//        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-//        startActivity(intent);
-//        finish();
-
     }
 
     // Parsing, serializing and saving content gained from server
@@ -96,9 +90,6 @@ public class SplashActivity extends Activity {
                 }
                 startActivity(intent);
                 finish();
-
-                Log.d(TAG, "CONNECTION ERROR!");
-
                 return false;
             }
         }
@@ -137,6 +128,5 @@ public class SplashActivity extends Activity {
             String jsonString = gson.toJson(records);
             return jsonString;
         }
-
     }
 }

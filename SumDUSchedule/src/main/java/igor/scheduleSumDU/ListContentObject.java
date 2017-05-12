@@ -1,13 +1,11 @@
 package igor.scheduleSumDU;
 
-
 import java.util.Date;
 
 public class ListContentObject {
 
     public String dayOfTheWeek = "";
     public Date fullDate;
-//    public String date = "";
     public String pairTime = "";
     public String lecturer = "";
     public String auditorium = "";
@@ -16,5 +14,4 @@ public class ListContentObject {
     public String pairTitle = "";
 
     ListContentObject() {}
-
 }

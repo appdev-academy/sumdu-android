@@ -3,6 +3,7 @@ package igor.scheduleSumDU;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,8 +12,10 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
@@ -35,13 +38,19 @@ import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -50,6 +59,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Scanner;
 
 import static igor.scheduleSumDU.R.id.tvPairTimeAndAuditorium;
 import static igor.scheduleSumDU.R.layout.item;
@@ -60,12 +70,8 @@ public class ContentActivity extends Activity {
     String TAG = "ContentActivity";
 
     public SharedPreferences sharedPreferencesContent;
-
     public Context contentContext;
-
-    private SimpleDateFormat dateFormatForMonth = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-
-    ProgressDialog progress;
+    private ProgressDialog progress;
 
 
     @Override
@@ -94,7 +100,6 @@ public class ContentActivity extends Activity {
         // Getting title from pressed element for using as activity title
         Intent intent = getIntent();
         setTitle(intent.getStringExtra("content_title"));
-        Log.d(TAG, "INTENT:" + intent);
 
         new ParseTask().execute();
     }
@@ -123,12 +128,12 @@ public class ContentActivity extends Activity {
 
                     progressDialog();
                     new ParseTask().execute();
-
                 return true;
 
             case R.id.import_button:
 
-
+                Intent intent = getIntent();
+                new DownloadIcsFromURL().execute(icsURL(intent.getStringExtra("content_type"), intent.getStringExtra("content_id")));
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -137,17 +142,12 @@ public class ContentActivity extends Activity {
 
     // Setting up and starting progress dialog
     public void progressDialog() {
-//        this.runOnUiThread(new Runnable() {
-//
-//            @Override
-//            public void run() {
+
                 progress = new ProgressDialog(ContentActivity.this);
                 progress.setTitle("Загрузка");
                 progress.setMessage("Отримання даних");
                 progress.setCanceledOnTouchOutside(false);
                 progress.show();
-//            }
-//        });
     }
 
 
@@ -161,13 +161,11 @@ public class ContentActivity extends Activity {
 
         Intent intent = getIntent();
         String contentType = intent.getStringExtra("content_type");
-        Log.d(TAG, "content_type: " + contentType);
 
         String[] pairTitle = new String[inputContent.size()];
         for(int i = 0; i < inputContent.size(); i++){
             if (inputContent.get(i).pairTitle != null) {
                 pairTitle[i] = inputContent.get(i).pairTitle;
-//                Log.d(TAG, "PAIR_TITLE:" + content.get(i).pairTitle);
             }
         }
 
@@ -190,7 +188,7 @@ public class ContentActivity extends Activity {
                     pairTime[i] = pairBeginningAndEnding;
 
                 } catch (ParseException e) {
-                    Log.d(TAG, "ParseException");
+                    Log.d(TAG, "ParseException" + e);
                 }
             }
         }
@@ -221,14 +219,12 @@ public class ContentActivity extends Activity {
         for(int i = 0; i < inputContent.size(); i++){
             if(dateFormatter.format(inputContent.get(i).fullDate) != null && i == 0) {
                 date[i] = dateFormatter.format(inputContent.get(i).fullDate);
-//                Log.d(TAG, "DATE:" + date[i]);
                 dayOfTheWeek[i] = inputContent.get(i).dayOfTheWeek;
             } else
 
             if (dateFormatter.format(inputContent.get(i).fullDate) != null && !dateFormatter.format(inputContent.get(i).fullDate).equals(dateFormatter.format(inputContent.get(i-1).fullDate))) {
                 date[i] = dateFormatter.format(inputContent.get(i).fullDate);
                 dayOfTheWeek[i] = inputContent.get(i).dayOfTheWeek;
-//                Log.d(TAG, "DATE:" + date[i]);
             }
         }
 
@@ -237,7 +233,6 @@ public class ContentActivity extends Activity {
         for(int i = 0; i < inputContent.size(); i++){
             if(dateFormatter.format(inputContent.get(i).fullDate) != null) {
                 dateMatch[i] = dateFormatter.format(inputContent.get(i).fullDate);
-//                Log.d(TAG, "DATE_MATCH:" + dateMatch[i]);
             }
         }
 
@@ -252,7 +247,6 @@ public class ContentActivity extends Activity {
 
             if (i == 0 || date[i] != null) {
 
-                Log.d(TAG, "Date[i]: " + date[i]);
                 try {
                     Date dateForMonth = dateFormatter.parse(date[i]);
                     tvDate.setText(dateFormatterForMonth.format(dateForMonth));
@@ -270,14 +264,17 @@ public class ContentActivity extends Activity {
             if (dateFormatter.format(inputContent.get(i).fullDate).equals(dateMatch[i]) && pairTitle[i] != null) {
 
                 View item = ltInflater.inflate(R.layout.item, linLayout, false);
-                TextView tvPairTitleAndType = (TextView) item.findViewById(R.id.tvPairTitleAndPairType);
+                TextView tvPairTitle = (TextView) item.findViewById(R.id.tvPairTitle);
                 TextView tvLecturer = (TextView) item.findViewById(R.id.tvLecturer);
                 TextView tvPairTimeAndAuditorium = (TextView) item.findViewById(R.id.tvPairTimeAndAuditorium);
+                TextView tvPairType = (TextView) item.findViewById(R.id.tvPairType);
 
-                if (pairType[i].trim().length() <= 1) {
-                        tvPairTitleAndType.setText(pairTitle[i]);
-                    } else tvPairTitleAndType.setText(pairTitle[i] + "\n(" + pairType[i] + ")");
-
+                if (pairTitle[i].trim().length() > 1) {
+                    tvPairTitle.setText(pairTitle[i]);
+                    }
+                if (pairType[i].trim().length() > 1) {
+                    tvPairType.setText("(" + pairType[i] + ")");
+                }
                 if (contentType.equals("id_grp")) {
                     if (auditorium[i].trim().length() > 1 && pairTime[i].trim().length() > 1) {
                         tvPairTimeAndAuditorium.setText(pairTime[i] + "  *  " + auditorium[i]);
@@ -322,7 +319,6 @@ public class ContentActivity extends Activity {
                 item.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
                 item.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.backgroundWhite));
                 linLayout.addView(item);
-//                    Log.d(TAG,"ITEM  " + i);
             }
         }
     }
@@ -332,9 +328,83 @@ public class ContentActivity extends Activity {
         Intent homeIntent = new Intent(this, MainActivity.class);
         homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(homeIntent);
-
     }
 
+    // Building up URL for getting .ics file
+    private String icsURL(String chosenID, String contentID) {
+        Uri.Builder builder = new Uri.Builder();
+        builder.scheme("http")
+                .authority("schedule.sumdu.edu.ua")
+                .appendPath("index")
+                .appendPath("ical")
+                .appendQueryParameter(chosenID, contentID);
+        return builder.build().toString();
+    }
+
+    class DownloadIcsFromURL extends AsyncTask<String, String, String> {
+
+        /**
+         * Downloading file in background thread
+         * */
+        @Override
+        protected String doInBackground(String... fileURL) {
+            int count;
+            try {
+                String root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString();
+
+                Intent intent = getIntent();
+
+                URL url = new URL(icsURL(intent.getStringExtra("content_type"), intent.getStringExtra("content_id")));
+
+                URLConnection connection = url.openConnection();
+                connection.connect();
+
+                // input stream to read file - with 8k buffer
+                InputStream input = new BufferedInputStream(url.openStream(), 8192);
+
+                // Output stream to write file
+                OutputStream output = new FileOutputStream(root+"/schedule.ics");
+                byte data[] = new byte[1024];
+
+                long total = 0;
+                while ((count = input.read(data)) != -1) {
+                    total += count;
+
+                    // writing data to file
+                    output.write(data, 0, count);
+                }
+
+                // flushing output
+                output.flush();
+
+                // closing streams
+                output.close();
+                input.close();
+
+            } catch (Exception e) {
+                Log.e("Error: ", e.getMessage());
+            }
+            return null;
+        }
+
+        /**
+         * After completing background task
+         * **/
+        @Override
+        protected void onPostExecute(String file_url) {
+
+                File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/schedule.ics");
+                Intent target = new Intent(Intent.ACTION_VIEW);
+                target.setDataAndType(Uri.fromFile(file),"*/*");
+                target.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+
+                Intent openIntent = Intent.createChooser(target, "Відкрити файл календаря");
+                try {
+                    startActivity(openIntent);
+                } catch (ActivityNotFoundException e) {
+                }
+        }
+    }
 
     // Parsing and saving gained data into shared preferences
     class ParseTask extends AsyncTask<Void, Void, String> {
@@ -352,7 +422,6 @@ public class ContentActivity extends Activity {
                 Intent intent = getIntent();
                 String downloadURL = intent.getStringExtra("downloadURL");
                 URL url = new URL(downloadURL);
-                Log.d(TAG, "downloadURL: " + downloadURL);
 
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
@@ -368,13 +437,11 @@ public class ContentActivity extends Activity {
                     buffer.append(line);
                 }
                 resultJson = buffer.toString();
-
                 result = "Success";
 
             } catch(Exception e){
 
                 result = null;
-
                 progress.dismiss();
 
                 runOnUiThread(new Runnable() {
@@ -383,7 +450,6 @@ public class ContentActivity extends Activity {
                                 "Не вдалося оновити розклад. Немає інтернет підключення.", Toast.LENGTH_LONG).show();
                     }
                 });
-
                 e.printStackTrace();
             }
 
@@ -401,15 +467,12 @@ public class ContentActivity extends Activity {
                 for (int i = 0; i < jsonArray.length(); i++)
                 {
                     ListContentObject newContentObject = new ListContentObject();
-//                    newContentObject.pairTime = jsonArray.getJSONObject(i).getString("TIME_PAIR");
 
                     char[] temp1 = new char[5];
                     jsonArray.getJSONObject(i).getString("TIME_PAIR").getChars(0, 5, temp1, 0);
                     String dateBuilder = jsonArray.getJSONObject(i).getString("DATE_REG") + " " + new String(temp1);
-//                    Log.d(TAG, "dateBuilder:" + dateBuilder);
 
                     newContentObject.fullDate = parser.parse(dateBuilder);
-//                    Log.d(TAG, "FULLDATE:" + newContentObject.fullDate);
 
                     newContentObject.dayOfTheWeek = jsonArray.getJSONObject(i).getString("NAME_WDAY");
                     newContentObject.lecturer = jsonArray.getJSONObject(i).getString("NAME_FIO");
@@ -431,16 +494,11 @@ public class ContentActivity extends Activity {
 
             } catch (Exception e) {
                 e.printStackTrace();
-                Log.d(TAG, "JSONException:");
 
                 result = null;
-
             }
-
             return result;
         }
-
-
 
         @Override
         protected void onPostExecute(String result) {
@@ -456,14 +514,12 @@ public class ContentActivity extends Activity {
                 progress.dismiss();
                 Toast.makeText(getApplicationContext(),
                         "Розклад оновлено", Toast.LENGTH_SHORT).show();
-                Log.d(TAG, "Refreshed");
             } else {
                 Log.d(TAG, "ELSE");
                 MainActivity mainActivity = new MainActivity();
                 mainActivity.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(contentContext);
                 DataManager dataManager = DataManager.getInstance();
                 Intent intent = getIntent();
-
 
                 if (mainActivity.sharedPreferences.getString(mainActivity.HISTORY_KEY, "").contains(intent.getStringExtra("content_title"))) {
 
@@ -472,13 +528,10 @@ public class ContentActivity extends Activity {
                     progress.dismiss();
                     
                 } else {
-
                     homeIntent();
                     progress.dismiss();
                 }
             }
         }
     }
-
-
 }

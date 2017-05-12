@@ -68,6 +68,7 @@ public class MainActivity extends TabActivity {
 
     private SearchView searchView;
     private ListView listView;
+    private ListView historyListView;
     private TabHost tabHost;
     private SwipeRefreshLayout swipeRefreshLayout;
 
@@ -92,20 +93,17 @@ public class MainActivity extends TabActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
 
         boolean tabletSize = getResources().getBoolean(R.bool.isTablet);
         if (tabletSize) {
             setContentView(R.layout.tablet_main);
-            Log.d(TAG, "isTABLET");
-//            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
         } else {
             setContentView(R.layout.main);
-            Log.d(TAG, "isPHONE");
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
         }
 
         listView = (ListView) findViewById(R.id.lvContent);
+        historyListView = (ListView) findViewById(R.id.lvHistory);
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_main);
 
         DataManager dataManager = DataManager.getInstance();
@@ -113,35 +111,31 @@ public class MainActivity extends TabActivity {
         mainActivityContext = getApplicationContext();
 
         setOnItemClickListener();
-        listView.setLongClickable(true);
+        historyListView.setLongClickable(true);
 
         getActionBar().setIcon(
                 new ColorDrawable(ContextCompat.getColor(this, android.R.color.transparent)));
 
-        Bundle intent = getIntent().getExtras();
-        if (!intent.getBoolean("Connection")) {
-            new ParseAuditoriumsGroupsTeachers().execute();
+        Intent intent = getIntent();
+        Bundle data = intent.getExtras();
+        if (data != null) {
+            if (!data.getBoolean("Connection")) {
+                new ParseAuditoriumsGroupsTeachers().execute();
+            }
         }
 
-        filterDataWithQuery();
-
         setupTabBar();
-
+        filterDataWithQuery();
         refreshListener();
-
         onLongItemClickListener();
-
         setAdapterByContent();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(TAG, "ONRESUME!");
-
         setAdapterByContent();
     }
-
 
     // Adding and setting up SearchView
     @Override
@@ -152,7 +146,6 @@ public class MainActivity extends TabActivity {
         searchView = (SearchView) item.getActionView();
 
         if (searchView == null) {
-            Log.d(TAG, "Search view is null");
         } else {
             searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override
@@ -189,12 +182,12 @@ public class MainActivity extends TabActivity {
         tabSpec = tabHost.newTabSpec("history");
         tabSpec.setIndicator("", getResources().getDrawable(R.drawable.tab_icon_selector));
 
-        tabSpec.setContent(R.id.lvContent);
+        tabSpec.setContent(R.id.lvHistory);
 
         historyImage.setVisibility(View.GONE);
-        listView.setEmptyView(historyImage);
-        listView.setEmptyView(emptyHistoryText1);
-        listView.setEmptyView(emptyHistoryText2);
+        historyListView.setEmptyView(historyImage);
+        historyListView.setEmptyView(emptyHistoryText1);
+        historyListView.setEmptyView(emptyHistoryText2);
 
         tabHost.addTab(tabSpec);
 
@@ -264,9 +257,9 @@ public class MainActivity extends TabActivity {
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-
                 if (!tabHost.getCurrentTabTag().equals("history")) {
-
+                    Toast.makeText(getApplicationContext(),
+                            "Оновлення списків...", Toast.LENGTH_SHORT).show();
                     swipeRefreshLayout.setRefreshing(true);
                     new ParseAuditoriumsGroupsTeachers().execute();
                 } else swipeRefreshLayout.setRefreshing(false);
@@ -339,7 +332,7 @@ public class MainActivity extends TabActivity {
                             chosenID = auditoriums.id;
                             content_title = auditoriums.title;
 
-                            dataManager.saveHistoryToBufferSharedPreferences(auditoriums.id, auditoriums.title, auditoriums.objectType, filteredHistory);
+                            dataManager.saveHistoryToBufferSharedPreferences(auditoriums.id, auditoriums.title, auditoriums.objectType, history);
 
                         } catch (Exception e) {
                         }
@@ -351,7 +344,7 @@ public class MainActivity extends TabActivity {
                             chosenID = groups.id;
                             content_title = groups.title;
 
-                            dataManager.saveHistoryToBufferSharedPreferences(groups.id, groups.title, groups.objectType, filteredHistory);
+                            dataManager.saveHistoryToBufferSharedPreferences(groups.id, groups.title, groups.objectType, history);
 
                         } catch (Exception e) {
                         }
@@ -363,19 +356,7 @@ public class MainActivity extends TabActivity {
                             chosenID = teachers.id;
                             content_title = teachers.title;
 
-                            dataManager.saveHistoryToBufferSharedPreferences(teachers.id, teachers.title, teachers.objectType, filteredHistory);
-
-                        } catch (Exception e) {
-                        }
-                    } else if (tabHost.getCurrentTab() == 0) {
-                        try {
-                            ListObject historyObject = filteredHistory.get(position);
-                            contentID = historyObject.objectType;
-                            chosenID = historyObject.id;
-                            content_title = historyObject.title;
-                            filteredHistory.remove(position);
-
-                            dataManager.saveHistoryToBufferSharedPreferences(historyObject.id, historyObject.title, historyObject.objectType, filteredHistory);
+                            dataManager.saveHistoryToBufferSharedPreferences(teachers.id, teachers.title, teachers.objectType, history);
 
                         } catch (Exception e) {
                         }
@@ -391,7 +372,6 @@ public class MainActivity extends TabActivity {
                     Date endDate = calendar.getTime();
 
                     String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
-                    Log.d(TAG, "contentID: " + contentID);
                     if (downloadURL != null) {
                         intentToContentActivity(contentID, chosenID, startDate, endDate);
                     } else Toast.makeText(getApplicationContext(),
@@ -399,17 +379,52 @@ public class MainActivity extends TabActivity {
                 }
             });
         }
+
+                historyListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                        DataManager dataManager = DataManager.getInstance();
+                        String contentID = "";
+                        String chosenID = "";
+
+                            try {
+                                ListObject historyObject = filteredHistory.get(position);
+                                contentID = historyObject.objectType;
+                                chosenID = historyObject.id;
+                                content_title = historyObject.title;
+                                filteredHistory.remove(position);
+
+                                dataManager.saveHistoryToBufferSharedPreferences(historyObject.id, historyObject.title, historyObject.objectType, history);
+
+                            } catch (Exception e) {
+                            }
+
+                        // Get start fullDate
+                        Date startDate = new Date();
+
+                        // Get end fullDate = start fullDate + 30 days
+                        Calendar calendar = Calendar.getInstance();
+                        calendar.setTime(startDate);
+                        calendar.add(Calendar.DATE, 30);
+                        Date endDate = calendar.getTime();
+
+                        String downloadURL = scheduleURLFor(contentID, chosenID, startDate, endDate);
+                        if (downloadURL != null) {
+                            intentToContentActivity(contentID, chosenID, startDate, endDate);
+                        } else Toast.makeText(getApplicationContext(),
+                                "Невірне посилання на об'єкт", Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     private void onLongItemClickListener() {
 
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        historyListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int pos, long id) {
-                if (tabHost.getCurrentTabTag().equals("history")) {
                     elementPosition = pos;
                     dialog();
-                }
+
                 return true;
             }
         });
@@ -423,9 +438,8 @@ public class MainActivity extends TabActivity {
         intent.putExtra("downloadURL", downloadURL);
         intent.putExtra("content_title", content_title);
         intent.putExtra("content_type", contentID);
+        intent.putExtra("content_id", chosenID);
         startActivity(intent);
-        Log.d(TAG, "Status: " + "GO!");
-
     }
 
     // Building up URL for server connectionStatus
@@ -442,24 +456,8 @@ public class MainActivity extends TabActivity {
         return builder.build().toString();
     }
 
-
-    // Comparing objects saved in sharedpreferences and linked in history tab with with their native tabs for displaing there
-    public ArrayList<ListObject> compareLists(ArrayList<ListObject> prevList, ArrayList<ListObject> modelList) {
-        ArrayList<ListObject> temp = new ArrayList<ListObject>();
-        for (ListObject modelListdata : modelList) {
-            for (ListObject prevListdata : prevList) {
-                if (prevListdata.getTitle().equals(modelListdata.getTitle())) {
-                    temp.add(prevListdata);
-                }
-            }
-        }
-        return temp;
-    }
-
-
     // Setting adapter equal to content of selected tab
     public void setAdapterByContent() {
-        ListView listView = (ListView)findViewById(R.id.lvContent);
 
         if (tabHost.getCurrentTab() == 3) {
             ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, filteredAuditoriums);
@@ -472,7 +470,7 @@ public class MainActivity extends TabActivity {
             listView.setAdapter(contentAdapter);
         } else if (tabHost.getCurrentTab() == 0) {
             ArrayAdapter<ListObject> contentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, filteredHistory);
-            listView.setAdapter(contentAdapter);
+            historyListView.setAdapter(contentAdapter);
         }
     }
 
@@ -516,14 +514,12 @@ public class MainActivity extends TabActivity {
                         swipeRefreshLayout.setRefreshing(false);
                     }
                 });
-                Log.d(TAG, "CONNECTION ERROR!");
-
                 return false;
             }
         }
 
         @Override
-        protected void onPostExecute(Boolean result) {
+        protected void onPostExecute(Boolean refresh) {
             swipeRefreshLayout.setRefreshing(false);
 
             filterDataWithQuery();
@@ -551,6 +547,5 @@ public class MainActivity extends TabActivity {
             String jsonString = gson.toJson(records);
             return jsonString;
         }
-
     }
 }
