@@ -36,6 +36,7 @@ import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.gson.Gson;
 
 import org.jsoup.Jsoup;
@@ -47,6 +48,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+
+import io.fabric.sdk.android.Fabric;
 
 import static android.R.id.list;
 
@@ -210,35 +213,36 @@ public class MainActivity extends TabActivity {
         tabSpec.setContent(R.id.lvContent);
         tabHost.addTab(tabSpec);
 
+        TextView textView1 = (TextView) tabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title);
+        TextView textView2 = (TextView) tabHost.getTabWidget().getChildAt(2).findViewById(android.R.id.title);
+        TextView textView3 = (TextView) tabHost.getTabWidget().getChildAt(3).findViewById(android.R.id.title);
+        textView1.setSingleLine(true);
+        textView2.setSingleLine(true);
+        textView3.setSingleLine(true);
+        
         boolean tabletSize = getResources().getBoolean(R.bool.isTablet);
         if (tabletSize) {
-            TextView textView1 = (TextView) tabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title);
             textView1.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size_tablet));
             tabHost.getTabWidget().getChildAt(1).getLayoutParams().width = 185;
 
-            TextView textView2 = (TextView) tabHost.getTabWidget().getChildAt(2).findViewById(android.R.id.title);
             textView2.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size_tablet));
             tabHost.getTabWidget().getChildAt(2).getLayoutParams().width = 185;
 
-            TextView textView3 = (TextView) tabHost.getTabWidget().getChildAt(3).findViewById(android.R.id.title);
             textView3.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size_tablet));
             tabHost.getTabWidget().getChildAt(3).getLayoutParams().width = 185;
         } else {
-            TextView textView1 = (TextView) tabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title);
             textView1.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size_phone));
             tabHost.getTabWidget().getChildAt(1).getLayoutParams().width = 50;
 
-            TextView textView2 = (TextView) tabHost.getTabWidget().getChildAt(2).findViewById(android.R.id.title);
             textView2.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size_phone));
             tabHost.getTabWidget().getChildAt(2).getLayoutParams().width = 50;
 
-            TextView textView3 = (TextView) tabHost.getTabWidget().getChildAt(3).findViewById(android.R.id.title);
             textView3.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size_phone));
             tabHost.getTabWidget().getChildAt(3).getLayoutParams().width = 50;
         }
 
-        // This tab will be chosen as default
         tabHost.setCurrentTab(1);
+        // This tab will be chosen as default
         tabHost.setCurrentTab(0);
 
         // Handler of tab change

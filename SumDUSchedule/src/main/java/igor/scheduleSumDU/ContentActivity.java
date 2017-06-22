@@ -104,7 +104,6 @@ public class ContentActivity extends Activity {
         new ParseTask().execute();
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 
