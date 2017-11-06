@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -15,18 +14,11 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AppCompatActivity;
-import android.text.Html;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
@@ -36,7 +28,6 @@ import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.crashlytics.android.Crashlytics;
 import com.google.gson.Gson;
 
 import org.jsoup.Jsoup;
@@ -48,10 +39,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-
-import io.fabric.sdk.android.Fabric;
-
-import static android.R.id.list;
 
 
 public class MainActivity extends TabActivity {
@@ -219,7 +206,7 @@ public class MainActivity extends TabActivity {
         textView1.setSingleLine(true);
         textView2.setSingleLine(true);
         textView3.setSingleLine(true);
-        
+
         boolean tabletSize = getResources().getBoolean(R.bool.isTablet);
         if (tabletSize) {
             textView1.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.tab_text_size_tablet));
@@ -263,7 +250,7 @@ public class MainActivity extends TabActivity {
             public void onRefresh() {
                 if (!tabHost.getCurrentTabTag().equals("history")) {
                     Toast.makeText(getApplicationContext(),
-                            "Оновлення списків...", Toast.LENGTH_SHORT).show();
+                            R.string.lists_updating, Toast.LENGTH_SHORT).show();
                     swipeRefreshLayout.setRefreshing(true);
                     new ParseAuditoriumsGroupsTeachers().execute();
                 } else swipeRefreshLayout.setRefreshing(false);
@@ -379,7 +366,7 @@ public class MainActivity extends TabActivity {
                     if (downloadURL != null) {
                         intentToContentActivity(contentID, chosenID, startDate, endDate);
                     } else Toast.makeText(getApplicationContext(),
-                            "Невірне посилання на об'єкт", Toast.LENGTH_LONG).show();
+                            R.string.wrong_object_reference, Toast.LENGTH_LONG).show();
                 }
             });
         }
@@ -416,7 +403,7 @@ public class MainActivity extends TabActivity {
                         if (downloadURL != null) {
                             intentToContentActivity(contentID, chosenID, startDate, endDate);
                         } else Toast.makeText(getApplicationContext(),
-                                "Невірне посилання на об'єкт", Toast.LENGTH_LONG).show();
+                                R.string.wrong_object_reference, Toast.LENGTH_LONG).show();
                     }
                 });
     }

@@ -2,12 +2,15 @@
     <string name="app_name">Розклад занять СумДУ</string>
     <string name="search_hint">Search...</string>
     <string name="action_search">Search</string>
-    <string name="title_content"></string>
     <string name="clean_history">Очистити історію</string>
     <string name="delete_element">Видалити елемент</string>
     <string name="cancel">Відміна</string>
     <string name="body_text">Оберіть дію над вмістом збереженим в історії:</string>
     <string name="history">Історія</string>
+    <string name="no_connection">Не вдалося оновити розклад. \nНемає інтернет підключення.</string>
+    <string name="lists_updating">Оновлення списків...</string>
+    <string name="wrong_object_reference">Невірне посилання на об\'єкт</string>
+    <string name="schedule_is_updated">Розклад оновлено</string>
 
     <string name="empty_history_text1">Історія порожня</string>
     <string name="empty_history_text2">Гортайте вкладки щоб переміщатися між основними розділами та шукати розклад</string>

@@ -8,7 +8,6 @@ import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
 import com.google.gson.Gson;
@@ -23,7 +22,6 @@ import java.util.Collections;
 
 import io.fabric.sdk.android.Fabric;
 
-import static com.android.volley.VolleyLog.TAG;
 
 public class SplashActivity extends Activity {
 

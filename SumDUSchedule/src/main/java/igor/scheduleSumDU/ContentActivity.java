@@ -8,46 +8,33 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -56,13 +43,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Scanner;
-
-import static igor.scheduleSumDU.R.id.tvPairTimeAndAuditorium;
-import static igor.scheduleSumDU.R.layout.item;
 
 
 public class ContentActivity extends Activity {
@@ -446,7 +428,7 @@ public class ContentActivity extends Activity {
                 runOnUiThread(new Runnable() {
                     public void run() {
                         Toast.makeText(getApplicationContext(),
-                                "Не вдалося оновити розклад. Немає інтернет підключення.", Toast.LENGTH_LONG).show();
+                                R.string.no_connection, Toast.LENGTH_LONG).show();
                     }
                 });
                 e.printStackTrace();
@@ -512,7 +494,7 @@ public class ContentActivity extends Activity {
                 setContentListView(dataManager.readDataFromSharedPreferences(intent));
                 progress.dismiss();
                 Toast.makeText(getApplicationContext(),
-                        "Розклад оновлено", Toast.LENGTH_SHORT).show();
+                        R.string.schedule_is_updated, Toast.LENGTH_SHORT).show();
             } else {
                 Log.d(TAG, "ELSE");
                 MainActivity mainActivity = new MainActivity();
