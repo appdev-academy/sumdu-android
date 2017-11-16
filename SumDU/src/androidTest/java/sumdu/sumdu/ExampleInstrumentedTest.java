@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("igor.contentparce", appContext.getPackageName());
+        assertEquals("academy.appdev.sumdu", appContext.getPackageName());
     }
 }
