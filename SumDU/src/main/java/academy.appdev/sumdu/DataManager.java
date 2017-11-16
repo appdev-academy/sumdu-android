@@ -231,8 +231,7 @@ public class DataManager {
         if (mainActivity.sharedPreferences.contains(mainActivity.HISTORY_KEY)) {
             String fetchResult = mainActivity.sharedPreferences.getString(mainActivity.HISTORY_KEY, "");
             history = parseStringToArrayList(fetchResult);
-            Log.d(TAG, "READ_HISTORY_FROM_SPREF:" + history);
-
+//            Log.d(TAG, "READ_HISTORY_FROM_SPREF:" + history);
         } else {
             history = new ArrayList<ListObject>();
         }

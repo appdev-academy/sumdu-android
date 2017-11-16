@@ -151,9 +151,8 @@ public class ContentActivity extends Activity {
                     calendar.add(Calendar.MINUTE, 80);
                     String pairBeginningAndEnding = (timeFormatter.format(inputContent.get(i).fullDate) + " - " + timeFormatter.format(calendar.getTime()));
                     pairTime[i] = pairBeginningAndEnding;
-
                 } catch (ParseException e) {
-                    Log.d(TAG, "ParseException" + e);
+//                    Log.d(TAG, "ParseException" + e);
                 }
             }
         }
@@ -216,7 +215,7 @@ public class ContentActivity extends Activity {
                     Date dateForMonth = dateFormatter.parse(date[i]);
                     tvDate.setText(dateFormatterForMonth.format(dateForMonth));
                 } catch (ParseException e) {
-                    Log.d(TAG, "ERROR: " + e);
+//                    Log.d(TAG, "ERROR: " + e);
                 }
 
                 TextView tvDayOfTheWeek = (TextView) dayItem.findViewById(R.id.tvDayOfTheWeek);
@@ -345,9 +344,8 @@ public class ContentActivity extends Activity {
                 // closing streams
                 output.close();
                 input.close();
-
             } catch (Exception e) {
-                Log.e("Error: ", e.getMessage());
+//                Log.e("Error: ", e.getMessage());
             }
             return null;
         }
@@ -480,7 +478,7 @@ public class ContentActivity extends Activity {
                 Toast.makeText(getApplicationContext(),
                         R.string.schedule_is_updated, Toast.LENGTH_SHORT).show();
             } else {
-                Log.d(TAG, "ELSE");
+//                Log.d(TAG, "ELSE");
                 MainActivity mainActivity = new MainActivity();
                 mainActivity.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(contentContext);
                 DataManager dataManager = DataManager.getInstance();
