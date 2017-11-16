@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Розклад занять СумДУ</string>
+    <string name="app_name">СумДУ</string>
     <string name="search_hint">Search...</string>
     <string name="action_search">Search</string>
     <string name="clean_history">Очистити історію</string>

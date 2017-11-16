@@ -1,4 +1,4 @@
-package igor.scheduleSumDU;
+package academy.appdev.sumdu;
 
 import android.app.ActionBar;
 import android.app.Activity;

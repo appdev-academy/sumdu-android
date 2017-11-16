@@ -1,4 +1,4 @@
-package igor.scheduleSumDU;
+package academy.appdev.sumdu;
 
 import java.util.Comparator;
 
