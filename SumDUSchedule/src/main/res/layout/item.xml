@@ -1,49 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="115dp"
     xmlns:autofit="http://schemas.android.com/apk/res-auto"
-    android:layout_marginBottom="3dp">
+    android:layout_marginBottom="1dp">
+
     <TextView
         android:id="@+id/tvPairTitle"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="top|start"
-        android:textSize="18sp"
+        autofit:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="8dp"
+        autofit:layout_constraintLeft_toLeftOf="parent"
+        autofit:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:ellipsize="end"
         android:maxLines="1"
         android:textColor="@android:color/black"
-        android:layout_marginTop="8dp"
-        android:layout_marginLeft="10dp"/>
+        android:textSize="18sp"
+        />
 
     <TextView
         android:id="@+id/tvPairType"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center|start"
-        android:textSize="17sp"
+        autofit:layout_constraintTop_toBottomOf="@id/tvPairTitle"
+        android:layout_marginTop="0dp"
+        autofit:layout_constraintLeft_toLeftOf="parent"
+        autofit:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:ellipsize="end"
         android:maxLines="1"
         android:textColor="@android:color/black"
-        android:layout_marginBottom="12dp"
-        android:layout_marginLeft="10dp"/>
+        android:textSize="16sp"
+        />
 
     <TextView
         android:id="@+id/tvPairTimeAndAuditorium"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center|start"
+        autofit:layout_constraintTop_toBottomOf="@id/tvPairType"
+        android:layout_marginTop="4dp"
+        autofit:layout_constraintLeft_toLeftOf="parent"
+        autofit:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
         android:textSize="16sp"
+        android:maxLines="1"
+        android:ellipsize="end"
         android:textColor="@android:color/black"
-        android:layout_marginTop="15dp"
-        android:layout_marginLeft="10dp"/>
+        />
 
     <TextView
         android:id="@+id/tvLecturer"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|start"
-        android:textSize="15sp"
+        autofit:layout_constraintTop_toBottomOf="@id/tvPairTimeAndAuditorium"
+        android:layout_marginTop="4dp"
+        autofit:layout_constraintLeft_toLeftOf="parent"
+        autofit:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:textSize="16sp"
+        android:maxLines="1"
+        android:ellipsize="end"
         android:textColor="@color/lightTextColor"
-        android:layout_marginTop="5dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginBottom="4dp"/>
-</FrameLayout>
+        />
+</android.support.constraint.ConstraintLayout>

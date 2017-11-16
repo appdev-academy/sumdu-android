@@ -55,7 +55,6 @@ public class ContentActivity extends Activity {
     public Context contentContext;
     private ProgressDialog progress;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,8 +75,7 @@ public class ContentActivity extends Activity {
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        getActionBar().setIcon(
-                new ColorDrawable(ContextCompat.getColor(this, android.R.color.transparent)));
+        getActionBar().setIcon(new ColorDrawable(ContextCompat.getColor(this, android.R.color.transparent)));
 
         // Getting title from pressed element for using as activity title
         Intent intent = getIntent();
@@ -88,8 +86,6 @@ public class ContentActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-
-
         getMenuInflater().inflate(R.menu.menu_content_activity, menu);
         return super.onCreateOptionsMenu(menu);
     }
@@ -99,22 +95,13 @@ public class ContentActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
-
             case android.R.id.home:
-
                 homeIntent();
                 return true;
 
             case R.id.refresh_button:
-
-                    progressDialog();
-                    new ParseTask().execute();
-                return true;
-
-            case R.id.import_button:
-
-                Intent intent = getIntent();
-                new DownloadIcsFromURL().execute(icsURL(intent.getStringExtra("content_type"), intent.getStringExtra("content_id")));
+                progressDialog();
+                new ParseTask().execute();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -123,18 +110,15 @@ public class ContentActivity extends Activity {
 
     // Setting up and starting progress dialog
     public void progressDialog() {
-
-                progress = new ProgressDialog(ContentActivity.this);
-                progress.setTitle("Загрузка");
-                progress.setMessage("Отримання даних");
-                progress.setCanceledOnTouchOutside(false);
-                progress.show();
+        progress = new ProgressDialog(ContentActivity.this);
+        progress.setMessage("Завантаження...");
+        progress.setCanceledOnTouchOutside(false);
+        progress.show();
     }
 
 
     // Setting listview considering to chosen element
     private void setContentListView(ArrayList<ListContentObject> inputContent) {
-
         Locale locale = new Locale("uk", "UK");
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
         SimpleDateFormat dateFormatterForMonth = new SimpleDateFormat("d MMMM", locale);
@@ -144,21 +128,21 @@ public class ContentActivity extends Activity {
         String contentType = intent.getStringExtra("content_type");
 
         String[] pairTitle = new String[inputContent.size()];
-        for(int i = 0; i < inputContent.size(); i++){
+        for (int i = 0; i < inputContent.size(); i++) {
             if (inputContent.get(i).pairTitle != null) {
                 pairTitle[i] = inputContent.get(i).pairTitle;
             }
         }
 
         String[] pairType = new String[inputContent.size()];
-        for(int i = 0; i < inputContent.size(); i++){
+        for (int i = 0; i < inputContent.size(); i++) {
             if (inputContent.get(i).pairType != null) {
                 pairType[i] = inputContent.get(i).pairType;
             }
         }
 
         String[] pairTime = new String[inputContent.size()];
-        for(int i = 0; i < inputContent.size(); i++){
+        for (int i = 0; i < inputContent.size(); i++) {
             if (timeFormatter.format(inputContent.get(i).fullDate) != null) {
                 try {
                     Date date = timeFormatter.parse(timeFormatter.format(inputContent.get(i).fullDate));
@@ -258,7 +242,7 @@ public class ContentActivity extends Activity {
                 }
                 if (contentType.equals("id_grp")) {
                     if (auditorium[i].trim().length() > 1 && pairTime[i].trim().length() > 1) {
-                        tvPairTimeAndAuditorium.setText(pairTime[i] + "  *  " + auditorium[i]);
+                        tvPairTimeAndAuditorium.setText(pairTime[i] + " - " + auditorium[i]);
                     } else if (auditorium[i].trim().length() <= 1 && pairTime[i].trim().length() > 1) {
                         tvPairTimeAndAuditorium.setText(pairTime[i]);
                     } else if (auditorium[i].trim().length() <= 1 && pairTime[i].trim().length() <= 1) {
@@ -271,7 +255,7 @@ public class ContentActivity extends Activity {
 
                 if (contentType.equals("id_aud")) {
                     if (group[i].trim().length() > 1 && pairTime[i].trim().length() > 1) {
-                        tvPairTimeAndAuditorium.setText(pairTime[i] + "  *  " + group[i]);
+                        tvPairTimeAndAuditorium.setText(pairTime[i] + " - " + group[i]);
                     } else if (group[i].trim().length() <= 1 && pairTime[i].trim().length() > 1) {
                         tvPairTimeAndAuditorium.setText(pairTime[i]);
                     } else if (group[i].trim().length() <= 1 && pairTime[i].trim().length() <= 1) {
@@ -284,7 +268,7 @@ public class ContentActivity extends Activity {
 
                 if (contentType.equals("id_fio")) {
                     if (auditorium[i].trim().length() > 1 && pairTime[i].trim().length() > 1) {
-                        tvPairTimeAndAuditorium.setText(pairTime[i] + "  *  " + auditorium[i]);
+                        tvPairTimeAndAuditorium.setText(pairTime[i] + " - " + auditorium[i]);
                     } else if (auditorium[i].trim().length() <= 1 && pairTime[i].trim().length() <= 1) {
                         tvPairTimeAndAuditorium.setText("");
                     } else if (auditorium[i].trim().length() <= 1 && pairTime[i].trim().length() > 1) {
