@@ -1,1 +1,2 @@
-include ':SumDU'
+include ':app'
+rootProject.name='SumDu'
