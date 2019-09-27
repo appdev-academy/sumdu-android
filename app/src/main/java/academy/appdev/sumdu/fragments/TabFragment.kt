@@ -4,22 +4,31 @@ import academy.appdev.sumdu.MainActivity
 import academy.appdev.sumdu.R
 import academy.appdev.sumdu.adapters.HeaderItemDecorator
 import academy.appdev.sumdu.adapters.TabListAdapter
+import academy.appdev.sumdu.mainActivity
+import academy.appdev.sumdu.networking.*
 import academy.appdev.sumdu.objects.ListObject
+import android.content.SharedPreferences
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import android.view.*
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.gson.Gson
 import kotlinx.android.synthetic.main.tab_list_layout.*
-import java.util.ArrayList
+import java.util.*
+import kotlin.collections.ArrayList
+
 
 open class TabFragment : Fragment() {
 
     private var data = emptyList<ListObject>()
 
-    private lateinit var listAdapter: TabListAdapter
+    val dataIsEmpty get() = data.isNullOrEmpty()
+
+    protected var listAdapter: TabListAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +46,7 @@ open class TabFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setUpRecycler()
+        sharedPreferencesListeners()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -44,8 +54,11 @@ open class TabFragment : Fragment() {
         searchSetUp(menu)
     }
 
-    open fun setNewData(newData: List<ListObject>) {
-        data = newData
+    fun setNewData(newData: ArrayList<ListObject>) {
+        if (listAdapter != null) {
+            data = newData
+            listAdapter?.setNewData(newData)
+        }
     }
 
     private fun setUpRecycler() {
@@ -59,13 +72,13 @@ open class TabFragment : Fragment() {
                 adapter?.getItemViewType(it) == 0
             })
 
-            swipeRefreshLayout.apply {
-                setOnRefreshListener {
-                    // todo: add request for specific endpoints for each tab
-                    Log.d("TAG", "REFRESH!")
-                    Handler().postDelayed({ isRefreshing = false }, 2000)
-                }
-            }
+            setUpSwipeRefresh()
+        }
+    }
+
+    open fun setUpSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener {
+            mainActivity?.getLists {}
         }
     }
 
@@ -78,11 +91,13 @@ open class TabFragment : Fragment() {
             }
 
             override fun onQueryTextChange(newText: String): Boolean {
-                listAdapter.setNewData(filterArrayListWithQuery(newText))
+                listAdapter?.setNewData(filterArrayListWithQuery(newText))
                 return false
             }
         })
     }
+
+    open fun sharedPreferencesListeners() {}
 
     fun filterArrayListWithQuery(query: String): ArrayList<ListObject> {
         val filteredArray = ArrayList<ListObject>()
@@ -97,6 +112,8 @@ open class TabFragment : Fragment() {
     fun onItemClicked(listObject: ListObject) {
         ContentFragment.contentObject = listObject
 
+        saveToHistory(listObject)
+
         activity?.supportFragmentManager
             ?.beginTransaction()
             ?.setCustomAnimations(
@@ -106,4 +123,39 @@ open class TabFragment : Fragment() {
             ?.addToBackStack(null)
             ?.commit()
     }
+
+    open fun onLongClick(listObject: ListObject) {}
+}
+
+fun TabFragment.refreshData(key: String) {
+    setNewData(
+        parseStringToArrayList(mainActivity?.sharedPreferences?.getString(key, "") ?: "")
+            ?: arrayListOf()
+    )
+}
+
+fun TabFragment.saveToHistory(
+    newHistoryObject: ListObject
+): String {
+    val history =
+        parseStringToArrayList(mainActivity?.sharedPreferences?.getString(HISTORY_KEY, "") ?: "")
+            ?: arrayListOf()
+
+    var doesHistoryContainsObject = false
+    history.forEach {
+        if (it.id == newHistoryObject.id) doesHistoryContainsObject = true
+    }
+
+    if (!doesHistoryContainsObject) {
+        history.add(history.size, newHistoryObject)
+    }
+
+    val jsonHistoryString = Gson().toJson(history)
+
+    mainActivity?.sharedPreferences?.edit()?.apply {
+        putString(HISTORY_KEY, jsonHistoryString)
+        apply()
+    }
+
+    return jsonHistoryString
 }

@@ -4,11 +4,14 @@ import academy.appdev.sumdu.R
 import academy.appdev.sumdu.adapters.TabListAdapter
 import academy.appdev.sumdu.adapters.TabsAdapter
 import academy.appdev.sumdu.mainActivity
+import academy.appdev.sumdu.networking.getLists
 import academy.appdev.sumdu.objects.ListObject
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.container_fragment_layout.*
+import kotlinx.android.synthetic.main.tab_list_layout.*
 
 class ContainerFragment : Fragment() {
 
@@ -30,6 +33,8 @@ class ContainerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setUpTabs()
+
+        mainActivity?.getLists({Log.d("TAG", "RR!")})
     }
 
 //    override fun onResume() {

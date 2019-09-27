@@ -3,6 +3,7 @@ package academy.appdev.sumdu.adapters
 import academy.appdev.sumdu.R
 import academy.appdev.sumdu.fragments.ContentFragment
 import academy.appdev.sumdu.fragments.TabFragment
+import academy.appdev.sumdu.mainActivity
 import academy.appdev.sumdu.objects.ListObject
 import android.view.LayoutInflater
 import android.view.View
@@ -26,7 +27,7 @@ class TabListAdapter(private var data: List<ListObject>, private val owner: TabF
     fun setNewData(newData: List<ListObject>) {
         data = newData
         mixGeneralArray()
-        notifyDataSetChanged()
+        owner.mainActivity?.runOnUiThread {notifyDataSetChanged()}
     }
 
     private fun mixGeneralArray() {
@@ -74,6 +75,11 @@ class TabListAdapter(private var data: List<ListObject>, private val owner: TabF
 
                     setOnClickListener {
                         owner.onItemClicked(listObject)
+                    }
+
+                    setOnLongClickListener {
+                        owner.onLongClick(listObject)
+                        true
                     }
                 }
             }

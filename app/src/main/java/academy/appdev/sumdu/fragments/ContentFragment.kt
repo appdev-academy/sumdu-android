@@ -1,5 +1,6 @@
 package academy.appdev.sumdu.fragments
 
+import academy.appdev.sumdu.AsynkHandler
 import academy.appdev.sumdu.MainActivity
 import academy.appdev.sumdu.R
 import academy.appdev.sumdu.adapters.ContentAdapter
@@ -7,6 +8,7 @@ import academy.appdev.sumdu.adapters.HeaderItemDecorator
 import academy.appdev.sumdu.mainActivity
 import academy.appdev.sumdu.objects.ListObject
 import academy.appdev.sumdu.objects.NetworkingObject
+import academy.appdev.sumdu.retrofit.Controller
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -138,6 +140,7 @@ class ContentFragment : Fragment() {
         }
 
         setUpRecycler()
+
         super.onViewCreated(view, savedInstanceState)
     }
 
@@ -208,14 +211,6 @@ class ContentFragment : Fragment() {
             addItemDecoration(HeaderItemDecorator(this) {
                 adapter?.getItemViewType(it) == 0
             })
-
-            swipeRefreshLayout.apply {
-                setOnRefreshListener {
-                    // todo: add request
-                    Log.d("TAG", "REFRESH!")
-                    Handler().postDelayed({ isRefreshing = false }, 2000)
-                }
-            }
         }
     }
 }
