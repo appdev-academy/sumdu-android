@@ -17,7 +17,7 @@ class TeacherTabFragment : TabFragment() {
 
     override fun onResume() {
         super.onResume()
-        refreshData(TEACHERS_KEY)
+        mainActivity?.getLists { refreshData(TEACHERS_KEY) }
     }
 
     override fun setUpSwipeRefresh() {

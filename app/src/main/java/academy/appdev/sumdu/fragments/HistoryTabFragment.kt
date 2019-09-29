@@ -2,6 +2,7 @@ package academy.appdev.sumdu.fragments
 
 import academy.appdev.sumdu.R
 import academy.appdev.sumdu.mainActivity
+import academy.appdev.sumdu.networking.CONTENT_KEY
 import academy.appdev.sumdu.networking.HISTORY_KEY
 import academy.appdev.sumdu.networking.parseStringToArrayList
 import academy.appdev.sumdu.objects.ListObject
@@ -25,16 +26,24 @@ class HistoryTabFragment : TabFragment() {
     override fun onLongClick(listObject: ListObject) {
         AlertDialog.Builder(context).apply {
             setTitle(R.string.history_delete)
-//            setMessage("Are you want to set the app background color to RED?")
             setPositiveButton(R.string.delete_item) { dialog, which ->
+                mainActivity?.sharedPreferences?.edit()?.remove(CONTENT_KEY(listObject.id))?.apply()
                 deleteItemFromHistory(listObject)
             }
 
             setNeutralButton(R.string.clear_history) { dialog, which ->
                 mainActivity?.sharedPreferences?.edit()?.apply {
-                    putString(HISTORY_KEY, "")
-                    apply()
-                }
+                    parseStringToArrayList(
+                        mainActivity?.sharedPreferences?.getString(
+                            HISTORY_KEY,
+                            ""
+                        )
+                    )?.forEach {
+                        remove(CONTENT_KEY(it.id))
+                    }
+                    remove(HISTORY_KEY)
+                }?.apply()
+
                 refreshData(HISTORY_KEY)
                 setUpHistoryPlaceholder()
             }

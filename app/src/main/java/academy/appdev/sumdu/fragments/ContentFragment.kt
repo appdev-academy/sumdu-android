@@ -4,8 +4,8 @@ import academy.appdev.sumdu.R
 import academy.appdev.sumdu.adapters.ContentAdapter
 import academy.appdev.sumdu.adapters.HeaderItemDecorator
 import academy.appdev.sumdu.mainActivity
-import academy.appdev.sumdu.networking.baseUrl
-import academy.appdev.sumdu.networking.getLists
+import academy.appdev.sumdu.makeToast
+import academy.appdev.sumdu.networking.*
 import academy.appdev.sumdu.objects.ListObject
 import academy.appdev.sumdu.objects.ContentObject
 import academy.appdev.sumdu.retrofit.IObjectLoader
@@ -123,6 +123,10 @@ class ContentFragment : Fragment() {
                                     if (contentList != null) {
                                         data = contentList
                                         listAdapter.setNewData(data)
+                                        mainActivity?.sharedPreferences?.edit()?.apply {
+                                            putString(CONTENT_KEY(id), parseListToJson(data))
+                                            apply()
+                                        }
                                     }
                                 }
                                 progressSpinner.isVisible = false
@@ -131,6 +135,7 @@ class ContentFragment : Fragment() {
                             override fun onFailure(call: Call<List<ContentObject>>, t: Throwable) {
                                 t
                                 progressSpinner.isVisible = false
+                                context?.makeToast(if (data.isNullOrEmpty()) R.string.can_not_load_content else R.string.can_not_load_content_offline)
                             }
                         })
                 }
@@ -150,6 +155,10 @@ class ContentFragment : Fragment() {
                                     if (contentList != null) {
                                         data = contentList
                                         listAdapter.setNewData(data)
+                                        mainActivity?.sharedPreferences?.edit()?.apply {
+                                            putString(CONTENT_KEY(id), parseListToJson(data))
+                                            apply()
+                                        }
                                     }
                                 }
                                 progressSpinner.isVisible = false
@@ -158,6 +167,7 @@ class ContentFragment : Fragment() {
                             override fun onFailure(call: Call<List<ContentObject>>, t: Throwable) {
                                 t
                                 progressSpinner.isVisible = false
+                                context?.makeToast(if (data.isNullOrEmpty()) R.string.can_not_load_content else R.string.can_not_load_content_offline)
                             }
                         })
                 }
@@ -177,6 +187,10 @@ class ContentFragment : Fragment() {
                                     if (contentList != null) {
                                         data = contentList
                                         listAdapter.setNewData(data)
+                                        mainActivity?.sharedPreferences?.edit()?.apply {
+                                            putString(CONTENT_KEY(id), parseListToJson(data))
+                                            apply()
+                                        }
                                     }
                                 }
                                 progressSpinner.isVisible = false
@@ -185,6 +199,7 @@ class ContentFragment : Fragment() {
                             override fun onFailure(call: Call<List<ContentObject>>, t: Throwable) {
                                 t
                                 progressSpinner.isVisible = false
+                                context?.makeToast(if (data.isNullOrEmpty()) R.string.can_not_load_content else R.string.can_not_load_content_offline)
                             }
                         })
                 }
@@ -232,6 +247,7 @@ class ContentFragment : Fragment() {
 //    }
 
     private fun setUpRecycler() {
+        getStoredContent()
         recyclerView.apply {
             setHasFixedSize(true)
             listAdapter = ContentAdapter(data, contentObject?.objectType?.equals("id_grp"))
@@ -242,6 +258,15 @@ class ContentFragment : Fragment() {
                 adapter?.getItemViewType(it) == 0
             })
         }
+    }
+
+    private fun getStoredContent() {
+        data = parseStringToList(
+            mainActivity?.sharedPreferences?.getString(
+                CONTENT_KEY(contentObject?.id),
+                ""
+            )
+        ) ?: emptyList()
     }
 }
 

@@ -8,7 +8,7 @@ import kotlinx.android.synthetic.main.tab_list_layout.*
 class GroupTabFragment : TabFragment() {
     override fun onResume() {
         super.onResume()
-        refreshData(GROUPS_KEY)
+        mainActivity?.getLists { refreshData(GROUPS_KEY) }
     }
 
     override fun setUpSwipeRefresh() {

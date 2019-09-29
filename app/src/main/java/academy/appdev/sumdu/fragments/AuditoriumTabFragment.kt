@@ -17,7 +17,7 @@ class AuditoriumTabFragment : TabFragment() {
 
     override fun onResume() {
         super.onResume()
-        refreshData(AUDITORIUMS_KEY)
+        mainActivity?.getLists { refreshData(AUDITORIUMS_KEY) }
     }
 
     override fun setUpSwipeRefresh() {

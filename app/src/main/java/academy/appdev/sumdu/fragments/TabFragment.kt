@@ -126,7 +126,7 @@ open class TabFragment : Fragment() {
 
 fun TabFragment.refreshData(key: String) {
     setNewData(
-        parseStringToArrayList(mainActivity?.sharedPreferences?.getString(key, "") ?: "")
+        parseStringToArrayList(mainActivity?.sharedPreferences?.getString(key, ""))
             ?: arrayListOf()
     )
 }
@@ -135,7 +135,7 @@ fun TabFragment.saveToHistory(
     newHistoryObject: ListObject
 ): String {
     val history =
-        parseStringToArrayList(mainActivity?.sharedPreferences?.getString(HISTORY_KEY, "") ?: "")
+        parseStringToArrayList(mainActivity?.sharedPreferences?.getString(HISTORY_KEY, ""))
             ?: arrayListOf()
 
     var doesHistoryContainsObject = false
