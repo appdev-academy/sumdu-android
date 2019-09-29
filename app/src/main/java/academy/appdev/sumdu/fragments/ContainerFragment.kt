@@ -33,8 +33,6 @@ class ContainerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setUpTabs()
-
-        mainActivity?.getLists({Log.d("TAG", "RR!")})
     }
 
 //    override fun onResume() {

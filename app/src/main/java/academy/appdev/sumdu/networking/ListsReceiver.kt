@@ -13,7 +13,7 @@ import java.io.IOException
 import java.util.*
 
 
-private const val baseUrl = "http://schedule.sumdu.edu.ua/"
+const val baseUrl = "http://schedule.sumdu.edu.ua/"
 
 // Special keys for sharedPreferences values
 val GROUPS_KEY = "academy.appdev.sumdu.groups"
@@ -35,9 +35,9 @@ fun MainActivity.getLists(handler: () -> Unit) {
             val teachers = document.select("#teacher").first()
 
             // Serialize options of `select` DOM objects
-            val serializedAuditoriums = parseListObjects(auditoriums)
-            val serializedGroups = parseListObjects(groups)
-            val serializedTeachers = parseListObjects(teachers)
+            val serializedAuditoriums = parseListObjects(auditoriums, "id_aud")
+            val serializedGroups = parseListObjects(groups, "id_grp")
+            val serializedTeachers = parseListObjects(teachers, "id_fio")
 
             // Save lists of Auditoriums, Groups and Teachers to SharedPreferences
             sharedPreferences?.edit()?.apply {
@@ -59,7 +59,7 @@ fun MainActivity.getLists(handler: () -> Unit) {
     }.execute()
 }
 
-fun parseListObjects(element: Element): String {
+fun parseListObjects(element: Element, objectType: String): String {
     // Loops through options of HTML select element and map entries to ListObjects
     val records = ArrayList<ListObject>()
     for (option in element.children()) {
@@ -68,6 +68,7 @@ fun parseListObjects(element: Element): String {
         if (title.length > 1) {
             records.add(ListObject().apply {
                 this.id = option.attr("value")
+                this.objectType = objectType
                 this.title = title
             })
         }

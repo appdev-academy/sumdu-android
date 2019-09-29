@@ -19,16 +19,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:autoSizeTextType="uniform"
-            android:text="Философия (лекция)"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/timeText"
+            android:id="@+id/pairTimeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="08:15-09:35"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/titleText" />
 
@@ -37,29 +35,27 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="6dp"
-            app:layout_constraintBottom_toBottomOf="@+id/timeText"
-            app:layout_constraintStart_toEndOf="@+id/timeText"
-            app:layout_constraintTop_toTopOf="@+id/timeText"
+            app:layout_constraintBottom_toBottomOf="@+id/pairTimeText"
+            app:layout_constraintStart_toEndOf="@+id/pairTimeText"
+            app:layout_constraintTop_toTopOf="@+id/pairTimeText"
             app:srcCompat="@drawable/point_divider_drawable" />
+
+        <TextView
+            android:id="@+id/auditoriumAndGroupText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            app:layout_constraintBottom_toBottomOf="@+id/pairTimeText"
+            app:layout_constraintStart_toEndOf="@+id/dividerImage"
+            app:layout_constraintTop_toTopOf="@+id/pairTimeText" />
 
         <TextView
             android:id="@+id/teacherText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:text="K2-218"
-            app:layout_constraintBottom_toBottomOf="@+id/timeText"
-            app:layout_constraintStart_toEndOf="@+id/dividerImage"
-            app:layout_constraintTop_toTopOf="@+id/timeText" />
-
-        <TextView
-            android:id="@+id/textView5"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Синах Андрей Александрович"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/timeText" />
+            app:layout_constraintTop_toBottomOf="@+id/pairTimeText" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

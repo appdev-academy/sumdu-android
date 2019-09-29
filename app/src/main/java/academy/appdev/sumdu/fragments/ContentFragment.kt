@@ -1,25 +1,32 @@
 package academy.appdev.sumdu.fragments
 
-import academy.appdev.sumdu.AsynkHandler
-import academy.appdev.sumdu.MainActivity
 import academy.appdev.sumdu.R
 import academy.appdev.sumdu.adapters.ContentAdapter
 import academy.appdev.sumdu.adapters.HeaderItemDecorator
 import academy.appdev.sumdu.mainActivity
+import academy.appdev.sumdu.networking.baseUrl
+import academy.appdev.sumdu.networking.getLists
 import academy.appdev.sumdu.objects.ListObject
-import academy.appdev.sumdu.objects.NetworkingObject
-import academy.appdev.sumdu.retrofit.Controller
+import academy.appdev.sumdu.objects.ContentObject
+import academy.appdev.sumdu.retrofit.IObjectLoader
+import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import android.view.*
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.synthetic.main.activity_main.*
+import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.tab_list_layout.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.text.ParseException
 import java.text.SimpleDateFormat
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.util.*
 
 
 class ContentFragment : Fragment() {
@@ -35,7 +42,7 @@ class ContentFragment : Fragment() {
         var contentObject: ListObject? = null
     }
 
-    private var data = emptyList<NetworkingObject>()
+    private var data = emptyList<ContentObject>()
 
     private lateinit var listAdapter: ContentAdapter
 
@@ -48,98 +55,19 @@ class ContentFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        data = listOf(
-            NetworkingObject(
-                1,
-                "Философия 1",
-                "практическая работа",
-                "08:15-9:30",
-                "Г1309",
-                "Чибиряк Олег Павловна",
-                "01-30-2019",
-                "Понедельник"
-            ),
-            NetworkingObject(
-                2,
-                "Философия 2",
-                "практическая работа",
-                "08:15-9:30",
-                "Г1309",
-                "Чибиряк Олег Павловна",
-                "01-30-2019",
-                "Понедельник"
-            ),
-            NetworkingObject(
-                3,
-                "Философия 3",
-                "практическая работа",
-                "08:15-9:30",
-                "Г1309",
-                "Чибиряк Олег Павловна",
-                "09-21-2019",
-                "Среда"
-            ),
-            NetworkingObject(
-                4,
-                "Философия 4",
-                "практическая работа",
-                "08:15-9:30",
-                "Г1309",
-                "Чибиряк Олег Павловна",
-                "09-21-2019",
-                "Среда"
-            ),
-            NetworkingObject(
-                5,
-                "Философия 5",
-                "практическая работа",
-                "08:15-9:30",
-                "Г1309",
-                "Чибиряк Олег Павловна",
-                "09-21-2019",
-                "Среда"
-            ),
-            NetworkingObject(
-                6,
-                "Философия 6",
-                "практическая работа",
-                "08:15-9:30",
-                "Г1309",
-                "Чибиряк Олег Павловна",
-                "03-05-2019",
-                "Четверг"
-            ),
-            NetworkingObject(
-                7,
-                "Философия 7",
-                "практическая работа",
-                "08:15-9:30",
-                "Г1309",
-                "Чибиряк Олег Павловна",
-                "03-05-2019",
-                "Четверг"
-            ),
-            NetworkingObject(
-                8,
-                "Философия 8",
-                "практическая работа",
-                "08:15-9:30",
-                "Г1309",
-                "Чибиряк Олег Павловна",
-                "03-05-2019",
-                "Четверг"
-            )
-        )
-
-//        setUpToolbar()
-
         mainActivity?.supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             setDisplayShowHomeEnabled(true)
             title = contentObject?.title
         }
 
+        swipeRefreshLayout.setOnRefreshListener {
+            swipeRefreshLayout.isRefreshing = false
+            getResponse()
+        }
+
         setUpRecycler()
+        getResponse()
 
         super.onViewCreated(view, savedInstanceState)
     }
@@ -160,6 +88,108 @@ class ContentFragment : Fragment() {
                 true
             }
             else -> false
+        }
+    }
+
+    private fun getResponse() {
+        progressSpinner.isVisible = true
+
+        contentObject?.apply {
+            val startDate = Date().stringValue
+            fun endDate(): String {
+                return Calendar.getInstance().apply {
+                    time = Date()
+                    add(Calendar.DATE, 30)
+                }.time.stringValue
+            }
+
+            val gson = GsonBuilder().setLenient().create()
+
+            // todo: temporary while workaround for passing Query parameter name is not found
+            when (contentObject?.objectType) {
+                "id_grp" -> {
+                    Retrofit.Builder()
+                        .baseUrl(baseUrl)
+                        .addConverterFactory(GsonConverterFactory.create(gson))
+                        .build().create(IObjectLoader::class.java)
+                        .getGroupContentJson(id ?: "", startDate, endDate())
+                        .enqueue(object : Callback<List<ContentObject>> {
+                            override fun onResponse(
+                                call: Call<List<ContentObject>>,
+                                response: Response<List<ContentObject>>
+                            ) {
+                                if (response.isSuccessful) {
+                                    val contentList = response.body()
+                                    if (contentList != null) {
+                                        data = contentList
+                                        listAdapter.setNewData(data)
+                                    }
+                                }
+                                progressSpinner.isVisible = false
+                            }
+
+                            override fun onFailure(call: Call<List<ContentObject>>, t: Throwable) {
+                                t
+                                progressSpinner.isVisible = false
+                            }
+                        })
+                }
+                "id_fio" -> {
+                    Retrofit.Builder()
+                        .baseUrl(baseUrl)
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build().create(IObjectLoader::class.java)
+                        .getTeacherContentJson(id ?: "", startDate, endDate())
+                        .enqueue(object : Callback<List<ContentObject>> {
+                            override fun onResponse(
+                                call: Call<List<ContentObject>>,
+                                response: Response<List<ContentObject>>
+                            ) {
+                                if (response.isSuccessful) {
+                                    val contentList = response.body()
+                                    if (contentList != null) {
+                                        data = contentList
+                                        listAdapter.setNewData(data)
+                                    }
+                                }
+                                progressSpinner.isVisible = false
+                            }
+
+                            override fun onFailure(call: Call<List<ContentObject>>, t: Throwable) {
+                                t
+                                progressSpinner.isVisible = false
+                            }
+                        })
+                }
+                "date_beg" -> {
+                    Retrofit.Builder()
+                        .baseUrl(baseUrl)
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build().create(IObjectLoader::class.java)
+                        .getAuditoriumContentJson(id ?: "", startDate, endDate())
+                        .enqueue(object : Callback<List<ContentObject>> {
+                            override fun onResponse(
+                                call: Call<List<ContentObject>>,
+                                response: Response<List<ContentObject>>
+                            ) {
+                                if (response.isSuccessful) {
+                                    val contentList = response.body()
+                                    if (contentList != null) {
+                                        data = contentList
+                                        listAdapter.setNewData(data)
+                                    }
+                                }
+                                progressSpinner.isVisible = false
+                            }
+
+                            override fun onFailure(call: Call<List<ContentObject>>, t: Throwable) {
+                                t
+                                progressSpinner.isVisible = false
+                            }
+                        })
+                }
+            }
+
         }
     }
 
@@ -204,7 +234,7 @@ class ContentFragment : Fragment() {
     private fun setUpRecycler() {
         recyclerView.apply {
             setHasFixedSize(true)
-            listAdapter = ContentAdapter(data)
+            listAdapter = ContentAdapter(data, contentObject?.objectType?.equals("id_grp"))
             adapter = listAdapter
             layoutManager = LinearLayoutManager(context)
 
@@ -216,7 +246,7 @@ class ContentFragment : Fragment() {
 }
 
 fun String.formatDate(): String? {
-    val dateFormat = SimpleDateFormat("dd-mm-yyyy")
+    val dateFormat = SimpleDateFormat("dd.mm.yyyy")
     return try {
         val date = dateFormat.parse(this)
         dateFormat.format(date)
@@ -224,3 +254,5 @@ fun String.formatDate(): String? {
         null
     }
 }
+
+val Date.stringValue get() = run { SimpleDateFormat("dd.MM.yyyy").format(this) }

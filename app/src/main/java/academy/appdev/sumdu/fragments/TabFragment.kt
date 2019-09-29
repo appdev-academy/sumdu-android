@@ -46,7 +46,6 @@ open class TabFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setUpRecycler()
-        sharedPreferencesListeners()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -96,8 +95,6 @@ open class TabFragment : Fragment() {
             }
         })
     }
-
-    open fun sharedPreferencesListeners() {}
 
     fun filterArrayListWithQuery(query: String): ArrayList<ListObject> {
         val filteredArray = ArrayList<ListObject>()
