@@ -171,7 +171,7 @@ class ContentFragment : Fragment() {
                             }
                         })
                 }
-                "date_beg" -> {
+                "id_aud" -> {
                     Retrofit.Builder()
                         .baseUrl(baseUrl)
                         .addConverterFactory(GsonConverterFactory.create())

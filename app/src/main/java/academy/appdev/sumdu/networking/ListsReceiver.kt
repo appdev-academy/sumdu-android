@@ -48,7 +48,7 @@ fun MainActivity.getLists(handler: () -> Unit) {
             val serializedTeachers = parseListObjects(teachers, "id_fio")
 
             // Save lists of Auditoriums, Groups and Teachers to SharedPreferences
-            sharedPreferences?.edit()?.apply {
+            sharedPreferences.edit()?.apply {
                 putString(AUDITORIUMS_KEY, serializedAuditoriums)
                 putString(GROUPS_KEY, serializedGroups)
                 putString(TEACHERS_KEY, serializedTeachers)
