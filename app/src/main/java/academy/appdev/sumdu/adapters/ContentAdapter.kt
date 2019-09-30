@@ -4,7 +4,6 @@ import academy.appdev.sumdu.R
 import academy.appdev.sumdu.fragments.formatDateString
 import academy.appdev.sumdu.fragments.formatDayMonth
 import academy.appdev.sumdu.fragments.toDate
-import academy.appdev.sumdu.objects.ContentHeaderObject
 import academy.appdev.sumdu.objects.ContentObject
 import android.view.LayoutInflater
 import android.view.View
@@ -40,14 +39,15 @@ class ContentAdapter(private var data: List<ContentObject>, private val forGroup
         generalData = ArrayList()
         data.sortedBy { it.date }.forEach { contentObject ->
             val date = contentObject.date?.formatDateString()
-            if (contentObject.date != null && generalData.find {
-                    if (it is ContentHeaderObject) {
-                        it.date == date
-                    } else {
-                        it == date
-                    }
-                } == null) {
-                generalData.add(ContentHeaderObject(date, contentObject.dayOfTheWeek))
+            if (date != null && !generalData.contains(date)) {
+//            if (contentObject.date != null && generalData.find {
+//                    if (it is ContentHeaderObject) {
+//                        it.date == date
+//                    } else {
+//                        it == date
+//                    }
+//                } == null) {
+                generalData.add(date)
                 generalData.add(contentObject)
             } else {
                 generalData.add(contentObject)
@@ -79,11 +79,9 @@ class ContentAdapter(private var data: List<ContentObject>, private val forGroup
         when (holder) {
             is HeaderViewHolder -> {
                 holder.itemView.apply {
-                    val headerObject = generalData[position] as ContentHeaderObject
-                    titleText.text = headerObject.date?.formatDayMonth()
-                    dayOfWeekText.text = SimpleDateFormat("EEEE", Locale("ru","RU")).format(headerObject.date?.toDate())
-
-//                    dayOfWeekText.text = headerObject.dayOfWeek
+                    val date = generalData[position] as String
+                    titleText.text = date.formatDayMonth()
+                    dayOfWeekText.text = SimpleDateFormat("EEEE", Locale("ru","RU")).format(date.toDate())
                 }
             }
             is ItemViewHolder -> {
@@ -106,11 +104,11 @@ class ContentAdapter(private var data: List<ContentObject>, private val forGroup
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (isPositionHeader(position)) HEADER else ITEM
+        return if (isPositionHeader(position)) ITEM else HEADER
     }
 
     private fun isPositionHeader(position: Int): Boolean {
-        return generalData[position] is ContentHeaderObject
+        return generalData[position] is ContentObject
     }
 
     inner class ItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
