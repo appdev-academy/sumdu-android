@@ -3,15 +3,24 @@ package academy.appdev.sumdu.fragments
 import academy.appdev.sumdu.R
 import academy.appdev.sumdu.mainActivity
 import academy.appdev.sumdu.networking.CONTENT_KEY
+import academy.appdev.sumdu.networking.GROUPS_KEY
 import academy.appdev.sumdu.networking.HISTORY_KEY
 import academy.appdev.sumdu.networking.parseStringToArrayList
 import academy.appdev.sumdu.objects.ListObject
 import android.app.AlertDialog
+import android.os.Bundle
+import android.view.View
 import androidx.core.view.isVisible
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.tab_list_layout.*
 
 class HistoryTabFragment : TabFragment() {
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        refreshData(HISTORY_KEY)
+        setUpHistoryPlaceholder()
+    }
 
     override fun onResume() {
         super.onResume()

@@ -129,6 +129,7 @@ fun TabFragment.refreshData(key: String) {
         parseStringToArrayList(mainActivity?.sharedPreferences?.getString(key, ""))
             ?: arrayListOf()
     )
+    swipeRefreshLayout.isRefreshing = false
 }
 
 fun TabFragment.saveToHistory(

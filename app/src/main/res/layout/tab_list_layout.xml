@@ -37,6 +37,9 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/emptyHistoryImage"
             android:layout_marginTop="30dp"
+            android:textSize="17sp"
+            android:fontFamily="@font/helvetica_neue_medium"
+            android:textColor="@color/textNormal"
             android:layout_centerHorizontal="true"
             android:text="@string/history_is_empty"/>
     </RelativeLayout>
@@ -47,7 +50,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:visibility="gone"
+        android:visibility="invisible"
         android:indeterminate="true" />
 
 </RelativeLayout>

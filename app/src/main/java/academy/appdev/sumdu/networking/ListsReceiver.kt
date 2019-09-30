@@ -54,13 +54,16 @@ fun MainActivity.getLists(handler: () -> Unit) {
                 apply()
             }
 
-            handler()
+            this.runOnUiThread { handler() }
 
 //            runOnUiThread { swipeRefreshLayout.isRefreshing = false }
         } catch (e: IOException) {
             e.printStackTrace()
-            handler()
-            this.runOnUiThread { applicationContext?.makeToast(R.string.can_not_load_list) }
+
+            this.runOnUiThread {
+                handler()
+                applicationContext?.makeToast(R.string.can_not_load_list)
+            }
 
             // todo: set swipeRefresh.isRefreshing = false
 //            this.runOnUiThread { swipeRefresh.isRefreshing = false }
