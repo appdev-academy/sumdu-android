@@ -1,7 +1,9 @@
 package academy.appdev.sumdu.adapters
 
 import academy.appdev.sumdu.R
-import academy.appdev.sumdu.fragments.formatDate
+import academy.appdev.sumdu.fragments.formatDateString
+import academy.appdev.sumdu.fragments.formatDayMonth
+import academy.appdev.sumdu.fragments.toDate
 import academy.appdev.sumdu.objects.ContentHeaderObject
 import academy.appdev.sumdu.objects.ContentObject
 import android.view.LayoutInflater
@@ -11,6 +13,9 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.content_list_item_layout.view.*
 import kotlinx.android.synthetic.main.list_header_layout.view.*
 import kotlinx.android.synthetic.main.list_item_layout.view.titleText
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class ContentAdapter(private var data: List<ContentObject>, private val forGroup: Boolean?) :
@@ -34,7 +39,7 @@ class ContentAdapter(private var data: List<ContentObject>, private val forGroup
     private fun mixGeneralArray() {
         generalData = ArrayList()
         data.sortedBy { it.date }.forEach { contentObject ->
-            val date = contentObject.date?.formatDate()
+            val date = contentObject.date?.formatDateString()
             if (contentObject.date != null && generalData.find {
                     if (it is ContentHeaderObject) {
                         it.date == date
@@ -75,8 +80,10 @@ class ContentAdapter(private var data: List<ContentObject>, private val forGroup
             is HeaderViewHolder -> {
                 holder.itemView.apply {
                     val headerObject = generalData[position] as ContentHeaderObject
-                    titleText.text = headerObject.date
-                    dayOfWeekText.text = headerObject.dayOfWeek
+                    titleText.text = headerObject.date?.formatDayMonth()
+                    dayOfWeekText.text = SimpleDateFormat("EEEE", Locale("ru","RU")).format(headerObject.date?.toDate())
+
+//                    dayOfWeekText.text = headerObject.dayOfWeek
                 }
             }
             is ItemViewHolder -> {

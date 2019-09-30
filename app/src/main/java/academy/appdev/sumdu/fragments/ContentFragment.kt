@@ -270,8 +270,16 @@ class ContentFragment : Fragment() {
     }
 }
 
-fun String.formatDate(): String? {
-    val dateFormat = SimpleDateFormat("dd.mm.yyyy")
+fun String.toDate(): Date? {
+    return try {
+        SimpleDateFormat("dd.MM.yyyy").parse(this)
+    } catch (e: ParseException) {
+        null
+    }
+}
+
+fun String.formatDateString(): String? {
+    val dateFormat = SimpleDateFormat("dd.MM.yyyy")
     return try {
         val date = dateFormat.parse(this)
         dateFormat.format(date)
@@ -280,4 +288,13 @@ fun String.formatDate(): String? {
     }
 }
 
-val Date.stringValue get() = run { SimpleDateFormat("dd.MM.yyyy").format(this) }
+fun String.formatDayMonth(): String? {
+    return try {
+        val date = SimpleDateFormat("dd.MM.yyyy").parse(this)
+        SimpleDateFormat("d MMMM", Locale("ru","RU")).format(date)
+    } catch (e: ParseException) {
+        null
+    }
+}
+
+val Date.stringValue: String get() = run { SimpleDateFormat("dd.MM.yyyy").format(this) }

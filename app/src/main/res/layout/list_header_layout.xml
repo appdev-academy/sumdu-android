@@ -2,14 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/lightTextColor"
+    android:background="@color/backgroundGray"
     android:orientation="vertical">
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_alignParentTop="true"
-        android:background="#99FF0000" />
 
     <TextView
         android:id="@+id/titleText"
@@ -19,8 +13,8 @@
         android:layout_marginStart="12dp"
         android:paddingTop="5dp"
         android:paddingBottom="4dp"
-        android:textColor="#99FF0000"
-        android:textSize="11dp" />
+        android:textColor="@color/textNormal"
+        android:textSize="17sp" />
 
     <TextView
         android:id="@+id/dayOfWeekText"
@@ -31,13 +25,8 @@
         android:layout_marginEnd="12dp"
         android:paddingTop="5dp"
         android:paddingBottom="4dp"
-        android:textColor="#99FF0000"
-        android:textSize="10dp" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_alignParentBottom="true"
-        android:background="#99FF0000" />
+        android:textColor="@color/textLight"
+        android:fontFamily="@font/helvetica_neue_regular"
+        android:textSize="15sp" />
 
 </RelativeLayout>

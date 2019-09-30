@@ -12,10 +12,13 @@
         android:minHeight="?actionBarSize"
         app:elevation="10dp"
         app:tabBackground="@color/colorPrimary"
-        app:tabIndicatorColor="@color/primaryTextColor"
+        app:tabIndicatorColor="@color/textNormal"
         app:tabIndicatorHeight="2dp"
         app:tabMode="scrollable"
-        app:tabTextColor="@color/primaryTextColor" />
+        app:tabTextColor="@color/textLight"
+        app:tabIconTint="@color/tab_icon_color"
+        app:tabSelectedTextColor="@color/textNormal"
+        app:tabTextAppearance="@style/TabBarText"/>
 
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/viewPager"

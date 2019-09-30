@@ -9,12 +9,29 @@
 
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+
+        <item name="android:textViewStyle">@style/HelveticaTextViewStyle</item>
     </style>
 
     <style name="AppTheme.Launcher">
         <item name="android:windowBackground">@drawable/splash_screen_phone</item>
         <!-- Optional, on Android 5+ you can modify the colorPrimaryDark color to match the windowBackground color for further branding-->
         <item name="colorPrimaryDark">@color/colorPrimary</item>
+    </style>
+
+    <style name="HelveticaTextViewStyle" parent="android:Widget.TextView">
+        <item name="android:fontFamily">@font/helvetica_neue_medium</item>
+    </style>
+
+    <style name="ToolBarStyle" parent="Theme.AppCompat">
+        <item name="android:textColorPrimary">@color/textBlack</item>
+        <item name="android:textColorSecondary">@color/colorPrimaryDark</item>
+        <item name="android:fontFamily">@font/helvetica_neue_medium</item>
+    </style>
+
+    <style name="TabBarText" parent="@android:style/TextAppearance.Widget.TabWidget">
+        <item name="android:fontFamily">@font/helvetica_neue_medium</item>
+        <item name="android:textSize">17sp</item>
     </style>
 
 </resources>
