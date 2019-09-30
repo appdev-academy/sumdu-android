@@ -8,12 +8,12 @@ import academy.appdev.sumdu.makeToast
 import academy.appdev.sumdu.networking.*
 import academy.appdev.sumdu.objects.ListObject
 import academy.appdev.sumdu.objects.ContentObject
+import academy.appdev.sumdu.retrofit.Api
+import academy.appdev.sumdu.retrofit.Api.baseUrl
 import academy.appdev.sumdu.retrofit.IObjectLoader
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -103,109 +103,35 @@ class ContentFragment : Fragment() {
                 }.time.stringValue
             }
 
-            val gson = GsonBuilder().setLenient().create()
-
-            // todo: temporary while workaround for passing Query parameter name is not found
             when (contentObject?.objectType) {
                 "id_grp" -> {
-                    Retrofit.Builder()
-                        .baseUrl(baseUrl)
-                        .addConverterFactory(GsonConverterFactory.create(gson))
-                        .build().create(IObjectLoader::class.java)
-                        .getGroupContentJson(id ?: "", startDate, endDate())
-                        .enqueue(object : Callback<List<ContentObject>> {
-                            override fun onResponse(
-                                call: Call<List<ContentObject>>,
-                                response: Response<List<ContentObject>>
-                            ) {
-                                if (response.isSuccessful) {
-                                    val contentList = response.body()
-                                    if (contentList != null) {
-                                        data = contentList
-                                        listAdapter.setNewData(data)
-                                        mainActivity?.sharedPreferences?.edit()?.apply {
-                                            putString(CONTENT_KEY(id), parseListToJson(data))
-                                            apply()
-                                        }
-                                    }
-                                }
-                                progressSpinner.isVisible = false
-                            }
-
-                            override fun onFailure(call: Call<List<ContentObject>>, t: Throwable) {
-                                t
-                                progressSpinner.isVisible = false
-                                context?.makeToast(if (data.isNullOrEmpty()) R.string.can_not_load_content else R.string.can_not_load_content_offline)
-                            }
-                        })
+                    Api.loadGroupContent(id, startDate, endDate(), ::onLoaded, ::onFailure)
                 }
                 "id_fio" -> {
-                    Retrofit.Builder()
-                        .baseUrl(baseUrl)
-                        .addConverterFactory(GsonConverterFactory.create())
-                        .build().create(IObjectLoader::class.java)
-                        .getTeacherContentJson(id ?: "", startDate, endDate())
-                        .enqueue(object : Callback<List<ContentObject>> {
-                            override fun onResponse(
-                                call: Call<List<ContentObject>>,
-                                response: Response<List<ContentObject>>
-                            ) {
-                                if (response.isSuccessful) {
-                                    val contentList = response.body()
-                                    if (contentList != null) {
-                                        data = contentList
-                                        listAdapter.setNewData(data)
-                                        mainActivity?.sharedPreferences?.edit()?.apply {
-                                            putString(CONTENT_KEY(id), parseListToJson(data))
-                                            apply()
-                                        }
-                                    }
-                                }
-                                progressSpinner.isVisible = false
-                            }
-
-                            override fun onFailure(call: Call<List<ContentObject>>, t: Throwable) {
-                                t
-                                progressSpinner.isVisible = false
-                                context?.makeToast(if (data.isNullOrEmpty()) R.string.can_not_load_content else R.string.can_not_load_content_offline)
-                            }
-                        })
+                    Api.loadTeacherContent(id, startDate, endDate(), ::onLoaded, ::onFailure)
                 }
                 "id_aud" -> {
-                    Retrofit.Builder()
-                        .baseUrl(baseUrl)
-                        .addConverterFactory(GsonConverterFactory.create())
-                        .build().create(IObjectLoader::class.java)
-                        .getAuditoriumContentJson(id ?: "", startDate, endDate())
-                        .enqueue(object : Callback<List<ContentObject>> {
-                            override fun onResponse(
-                                call: Call<List<ContentObject>>,
-                                response: Response<List<ContentObject>>
-                            ) {
-                                if (response.isSuccessful) {
-                                    val contentList = response.body()
-                                    if (contentList != null) {
-                                        data = contentList
-                                        listAdapter.setNewData(data)
-                                        mainActivity?.sharedPreferences?.edit()?.apply {
-                                            putString(CONTENT_KEY(id), parseListToJson(data))
-                                            apply()
-                                        }
-                                    }
-                                }
-                                progressSpinner.isVisible = false
-                            }
-
-                            override fun onFailure(call: Call<List<ContentObject>>, t: Throwable) {
-                                t
-                                progressSpinner.isVisible = false
-                                context?.makeToast(if (data.isNullOrEmpty()) R.string.can_not_load_content else R.string.can_not_load_content_offline)
-                            }
-                        })
+                    Api.loadAuditoriumContent(id, startDate, endDate(), ::onLoaded, ::onFailure)
                 }
             }
 
         }
+    }
+
+    private fun onLoaded(data: List<ContentObject>?) {
+        this.data = data ?: emptyList()
+        listAdapter.setNewData(this.data)
+        mainActivity?.sharedPreferences?.edit()?.apply {
+            putString(CONTENT_KEY(contentObject?.id), parseListToJson(this@ContentFragment.data))
+            apply()
+        }
+
+        progressSpinner.isVisible = false
+    }
+
+    private fun onFailure(throwable: Throwable) {
+        progressSpinner.isVisible = false
+        context?.makeToast(if (data.isNullOrEmpty()) R.string.can_not_load_content else R.string.can_not_load_content_offline)
     }
 
 //    private fun setUpToolbar() {
@@ -291,7 +217,7 @@ fun String.formatDateString(): String? {
 fun String.formatDayMonth(): String? {
     return try {
         val date = SimpleDateFormat("dd.MM.yyyy").parse(this)
-        SimpleDateFormat("d MMMM", Locale("ru","RU")).format(date)
+        SimpleDateFormat("d MMMM", Locale("ru", "RU")).format(date)
     } catch (e: ParseException) {
         null
     }

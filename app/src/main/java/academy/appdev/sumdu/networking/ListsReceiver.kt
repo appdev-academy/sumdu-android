@@ -7,6 +7,7 @@ import academy.appdev.sumdu.fragments.ContentFragment
 import academy.appdev.sumdu.makeToast
 import academy.appdev.sumdu.objects.ContentObject
 import academy.appdev.sumdu.objects.ListObject
+import academy.appdev.sumdu.retrofit.Api.baseUrl
 import androidx.preference.PreferenceManager
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -16,8 +17,6 @@ import org.jsoup.nodes.Element
 import java.io.IOException
 import java.util.*
 
-
-const val baseUrl = "http://schedule.sumdu.edu.ua/"
 
 // Special keys for sharedPreferences values
 val GROUPS_KEY = "academy.appdev.sumdu.groups"
