@@ -5,27 +5,22 @@ import academy.appdev.sumdu.adapters.ContentAdapter
 import academy.appdev.sumdu.adapters.HeaderItemDecorator
 import academy.appdev.sumdu.mainActivity
 import academy.appdev.sumdu.makeToast
-import academy.appdev.sumdu.networking.*
-import academy.appdev.sumdu.objects.ListObject
+import academy.appdev.sumdu.networking.CONTENT_KEY
+import academy.appdev.sumdu.networking.parseListToJson
+import academy.appdev.sumdu.networking.parseStringToList
 import academy.appdev.sumdu.objects.ContentObject
+import academy.appdev.sumdu.objects.ListObject
 import academy.appdev.sumdu.retrofit.Api
-import academy.appdev.sumdu.retrofit.Api.baseUrl
-import academy.appdev.sumdu.retrofit.IObjectLoader
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.tab_list_layout.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import java.text.ParseException
 import java.text.SimpleDateFormat
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import java.util.*
 
 
@@ -83,8 +78,11 @@ class ContentFragment : Fragment() {
                 activity?.onBackPressed()
                 true
             }
-            R.id.share -> {
-                Log.d("TAG", "SHARE!")
+            R.id.save -> {
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.data = Uri.parse(icsURL(contentObject?.objectType, contentObject?.id))
+                startActivity(intent)
+
                 true
             }
             else -> false
@@ -96,14 +94,8 @@ class ContentFragment : Fragment() {
 
         contentObject?.apply {
             val startDate = Date().stringValue
-            fun endDate(): String {
-                return Calendar.getInstance().apply {
-                    time = Date()
-                    add(Calendar.DATE, 30)
-                }.time.stringValue
-            }
 
-            when (contentObject?.objectType) {
+            when (objectType) {
                 "id_grp" -> {
                     Api.loadGroupContent(id, startDate, endDate(), ::onLoaded, ::onFailure)
                 }
@@ -132,6 +124,25 @@ class ContentFragment : Fragment() {
     private fun onFailure(throwable: Throwable) {
         progressSpinner.isVisible = false
         context?.makeToast(if (data.isNullOrEmpty()) R.string.can_not_load_content else R.string.can_not_load_content_offline)
+    }
+
+    private fun endDate(): String {
+        return Calendar.getInstance().apply {
+            time = Date()
+            add(Calendar.DATE, 29)
+        }.time.stringValue
+    }
+
+    // Building up URL for getting .ics file
+    private fun icsURL(chosenID: String?, contentID: String?): String {
+        return Uri.Builder().scheme("http")
+            .authority("schedule.sumdu.edu.ua")
+            .appendPath("index")
+            .appendPath("ical")
+            .appendQueryParameter(chosenID, contentID)
+            .appendQueryParameter("date_beg", Date().stringValue)
+            .appendQueryParameter("date_end", endDate())
+            .build().toString()
     }
 
 //    private fun setUpToolbar() {

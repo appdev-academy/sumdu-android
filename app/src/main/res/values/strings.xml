@@ -8,7 +8,7 @@
 
     <string name="refresh">Refresh</string>
     <string name="search">Search</string>
-    <string name="share">Share</string>
+    <string name="save_to_calendar">Save to Calendar</string>
 
     <string name="history_delete">Удаление истории</string>
     <string name="delete_item">Удалить элемент</string>
