@@ -1,9 +1,8 @@
 package academy.appdev.sumdu.activities
 
-import academy.appdev.sumdu.AsynkHandler
-import academy.appdev.sumdu.MainActivity
+import academy.appdev.sumdu.*
 import academy.appdev.sumdu.networking.*
-import academy.appdev.sumdu.retrofit.Api.baseUrl
+import academy.appdev.sumdu.networking.retrofit.Api.baseUrl
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

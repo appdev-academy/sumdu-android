@@ -1,10 +1,8 @@
 package academy.appdev.sumdu
 
 import academy.appdev.sumdu.fragments.ContainerFragment
-import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
@@ -43,6 +41,3 @@ class MainActivity : AppCompatActivity() {
 
 val Fragment.mainActivity: MainActivity? get() = context as? MainActivity
 
-fun Context.makeToast(stringId: Int) {
-    Toast.makeText(this, stringId, Toast.LENGTH_SHORT).show()
-}

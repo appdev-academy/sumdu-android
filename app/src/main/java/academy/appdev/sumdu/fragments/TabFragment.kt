@@ -1,25 +1,18 @@
 package academy.appdev.sumdu.fragments
 
-import academy.appdev.sumdu.MainActivity
 import academy.appdev.sumdu.R
 import academy.appdev.sumdu.adapters.HeaderItemDecorator
 import academy.appdev.sumdu.adapters.TabListAdapter
 import academy.appdev.sumdu.mainActivity
-import academy.appdev.sumdu.networking.*
+import academy.appdev.sumdu.networking.getLists
 import academy.appdev.sumdu.objects.ListObject
-import android.content.SharedPreferences
+import academy.appdev.sumdu.saveToHistory
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.appcompat.widget.SearchView
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.gson.Gson
 import kotlinx.android.synthetic.main.tab_list_layout.*
-import java.util.*
-import kotlin.collections.ArrayList
 
 
 open class TabFragment : Fragment() {
@@ -124,36 +117,3 @@ open class TabFragment : Fragment() {
     open fun onLongClick(listObject: ListObject) {}
 }
 
-fun TabFragment.refreshData(key: String) {
-    setNewData(
-        parseStringToArrayList(mainActivity?.sharedPreferences?.getString(key, ""))
-            ?: arrayListOf()
-    )
-    swipeRefreshLayout.isRefreshing = false
-}
-
-fun TabFragment.saveToHistory(
-    newHistoryObject: ListObject
-): String {
-    val history =
-        parseStringToArrayList(mainActivity?.sharedPreferences?.getString(HISTORY_KEY, ""))
-            ?: arrayListOf()
-
-    var doesHistoryContainsObject = false
-    history.forEach {
-        if (it.id == newHistoryObject.id) doesHistoryContainsObject = true
-    }
-
-    if (!doesHistoryContainsObject) {
-        history.add(history.size, newHistoryObject)
-    }
-
-    val jsonHistoryString = Gson().toJson(history)
-
-    mainActivity?.sharedPreferences?.edit()?.apply {
-        putString(HISTORY_KEY, jsonHistoryString)
-        apply()
-    }
-
-    return jsonHistoryString
-}

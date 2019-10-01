@@ -17,7 +17,5 @@ class ContentObject(
     @SerializedName("NAME_FIO")
     var teacher: String? = null,
     @SerializedName("DATE_REG")
-    var date: String? = null,
-    @SerializedName("NAME_WDAY")
-    var dayOfTheWeek: String? = null
+    var date: String? = null
 )

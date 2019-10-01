@@ -1,4 +1,4 @@
-package academy.appdev.sumdu.retrofit
+package academy.appdev.sumdu.networking.retrofit
 
 import academy.appdev.sumdu.objects.ContentObject
 import com.google.gson.GsonBuilder

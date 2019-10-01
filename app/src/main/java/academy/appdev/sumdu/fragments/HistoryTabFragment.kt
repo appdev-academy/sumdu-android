@@ -1,10 +1,6 @@
 package academy.appdev.sumdu.fragments
 
-import academy.appdev.sumdu.R
-import academy.appdev.sumdu.mainActivity
-import academy.appdev.sumdu.networking.CONTENT_KEY
-import academy.appdev.sumdu.networking.GROUPS_KEY
-import academy.appdev.sumdu.networking.HISTORY_KEY
+import academy.appdev.sumdu.*
 import academy.appdev.sumdu.networking.parseStringToArrayList
 import academy.appdev.sumdu.objects.ListObject
 import android.app.AlertDialog

@@ -1,10 +1,10 @@
 package academy.appdev.sumdu.adapters
 
 import academy.appdev.sumdu.R
-import academy.appdev.sumdu.fragments.formatDateString
-import academy.appdev.sumdu.fragments.formatDayMonth
-import academy.appdev.sumdu.fragments.toDate
+import academy.appdev.sumdu.formatDateString
+import academy.appdev.sumdu.formatDayMonth
 import academy.appdev.sumdu.objects.ContentObject
+import academy.appdev.sumdu.toDate
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -40,13 +40,6 @@ class ContentAdapter(private var data: List<ContentObject>, private val forGroup
         data.sortedBy { it.date }.forEach { contentObject ->
             val date = contentObject.date?.formatDateString()
             if (date != null && !generalData.contains(date)) {
-//            if (contentObject.date != null && generalData.find {
-//                    if (it is ContentHeaderObject) {
-//                        it.date == date
-//                    } else {
-//                        it == date
-//                    }
-//                } == null) {
                 generalData.add(date)
                 generalData.add(contentObject)
             } else {

@@ -1,4 +1,4 @@
-package academy.appdev.sumdu.retrofit
+package academy.appdev.sumdu.networking.retrofit
 
 import academy.appdev.sumdu.objects.ContentObject
 import retrofit2.Call
@@ -8,8 +8,6 @@ import retrofit2.http.Query
 
 interface IObjectLoader {
 
-    // 3 separate methods are temporary
-    // todo: make it single with "contentType" dynamic parameter
     @GET("index/json")
     fun getGroupContent(@Query("id_grp") id: String?, @Query("date_beg") dateBeginning: String, @Query("date_end") dateEnd: String): Call<List<ContentObject>>
 
