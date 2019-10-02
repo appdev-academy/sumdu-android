@@ -27,7 +27,7 @@ class SplashActivity : AppCompatActivity() {
         AsynkHandler {
             try {
                 // Download HTML document and parse `select` objects
-                val document = Jsoup.connect(baseUrl).get()
+                val document = Jsoup.connect(baseUrl(this)).get()
                 val auditoriums = document.select("#auditorium").first()
                 val groups = document.select("#group").first()
                 val teachers = document.select("#teacher").first()

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">СумДу</string>
+
+    <string name="history">Історія</string>
+    <string name="group">Група</string>
+    <string name="teacher">Викладач</string>
+    <string name="auditorium">Аудиторія</string>
+
+    <string name="refresh">Оновити</string>
+    <string name="search">Пошук</string>
+    <string name="save_to_calendar">Зберегти до календарю</string>
+
+    <string name="history_delete">Видалення історії</string>
+    <string name="delete_item">Видалити елемент</string>
+    <string name="clear_history">Очистити історію</string>
+    <string name="history_is_empty">Історія порожня</string>
+
+    <string name="can_not_load_list">Не вдалося завантажити список</string>
+    <string name="can_not_load_content">Не вдалося завантажити розклад</string>
+    <string name="can_not_load_content_offline">Не увдалося завантажити розклад. Выдображуэться збережене оффлайн</string>
+</resources>

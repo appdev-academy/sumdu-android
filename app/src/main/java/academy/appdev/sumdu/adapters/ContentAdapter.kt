@@ -1,10 +1,7 @@
 package academy.appdev.sumdu.adapters
 
-import academy.appdev.sumdu.R
-import academy.appdev.sumdu.formatDateString
-import academy.appdev.sumdu.formatDayMonth
+import academy.appdev.sumdu.*
 import academy.appdev.sumdu.objects.ContentObject
-import academy.appdev.sumdu.toDate
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,8 +10,6 @@ import kotlinx.android.synthetic.main.content_list_item_layout.view.*
 import kotlinx.android.synthetic.main.list_header_layout.view.*
 import kotlinx.android.synthetic.main.list_item_layout.view.titleText
 import java.text.SimpleDateFormat
-import java.util.*
-import kotlin.collections.ArrayList
 
 
 class ContentAdapter(private var data: List<ContentObject>, private val forGroup: Boolean?) :
@@ -73,8 +68,8 @@ class ContentAdapter(private var data: List<ContentObject>, private val forGroup
             is HeaderViewHolder -> {
                 holder.itemView.apply {
                     val date = generalData[position] as String
-                    titleText.text = date.formatDayMonth()
-                    dayOfWeekText.text = SimpleDateFormat("EEEE", Locale("ru","RU")).format(date.toDate())
+                    titleText.text = date.formatDayMonth(context)
+                    dayOfWeekText.text = SimpleDateFormat("EEEE", context?.appLocale).format(date.toDate())
                 }
             }
             is ItemViewHolder -> {

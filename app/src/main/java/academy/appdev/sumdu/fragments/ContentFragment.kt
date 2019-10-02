@@ -92,13 +92,13 @@ class ContentFragment : Fragment() {
 
             when (objectType) {
                 "id_grp" -> {
-                    Api.loadGroupContent(id, startDate, endDate(), ::onLoaded, ::onFailure)
+                    Api.loadGroupContent(context, id, startDate, endDate(), ::onLoaded, ::onFailure)
                 }
                 "id_fio" -> {
-                    Api.loadTeacherContent(id, startDate, endDate(), ::onLoaded, ::onFailure)
+                    Api.loadTeacherContent(context, id, startDate, endDate(), ::onLoaded, ::onFailure)
                 }
                 "id_aud" -> {
-                    Api.loadAuditoriumContent(id, startDate, endDate(), ::onLoaded, ::onFailure)
+                    Api.loadAuditoriumContent(context, id, startDate, endDate(), ::onLoaded, ::onFailure)
                 }
             }
 
@@ -113,11 +113,11 @@ class ContentFragment : Fragment() {
             apply()
         }
 
-        progressSpinner.isVisible = false
+        progressSpinner?.isVisible = false
     }
 
     private fun onFailure(throwable: Throwable) {
-        progressSpinner.isVisible = false
+        progressSpinner?.isVisible = false
         context?.makeToast(if (data.isNullOrEmpty()) R.string.can_not_load_content else R.string.can_not_load_content_offline)
     }
 

@@ -64,10 +64,10 @@ fun String.formatDateString(): String? {
     }
 }
 
-fun String.formatDayMonth(): String? {
+fun String.formatDayMonth(context: Context?): String? {
     return try {
         val date = SimpleDateFormat("dd.MM.yyyy").parse(this)
-        SimpleDateFormat("d MMMM", Locale("ru", "RU")).format(date)
+        SimpleDateFormat("d MMMM", context?.appLocale).format(date)
     } catch (e: ParseException) {
         null
     }

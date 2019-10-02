@@ -1,22 +1,16 @@
 package academy.appdev.sumdu.networking
 
 import academy.appdev.sumdu.*
-import academy.appdev.sumdu.objects.ContentObject
-import academy.appdev.sumdu.objects.ListObject
 import academy.appdev.sumdu.networking.retrofit.Api.baseUrl
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Element
 import java.io.IOException
-import java.util.*
 
 
 fun MainActivity.getLists(handler: () -> Unit) {
     AsynkHandler {
         try {
             // Download HTML document and parse `select` objects
-            val document = Jsoup.connect(baseUrl).get()
+            val document = Jsoup.connect(baseUrl(this)).get()
             val auditoriums = document.select("#auditorium").first()
             val groups = document.select("#group").first()
             val teachers = document.select("#teacher").first()
