@@ -4,7 +4,9 @@ import academy.appdev.sumdu.fragments.TabFragment
 import academy.appdev.sumdu.networking.parseStringToArrayList
 import academy.appdev.sumdu.objects.ListObject
 import android.content.Context
+import android.content.SharedPreferences
 import android.widget.Toast
+import androidx.preference.PreferenceManager
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.tab_list_layout.*
 import java.text.ParseException
@@ -73,9 +75,10 @@ fun String.formatDayMonth(context: Context?): String? {
     }
 }
 
-
 fun Context.makeToast(stringId: Int) {
     Toast.makeText(this, stringId, Toast.LENGTH_SHORT).show()
 }
+
+val Context.sharedPreferences: SharedPreferences get() = PreferenceManager.getDefaultSharedPreferences(this)
 
 val Date.stringValue: String get() = run { SimpleDateFormat("dd.MM.yyyy").format(this) }

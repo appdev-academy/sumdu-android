@@ -1,17 +1,13 @@
 package academy.appdev.sumdu
 
 import academy.appdev.sumdu.fragments.ContainerFragment
-import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
-
-    val sharedPreferences: SharedPreferences get() = PreferenceManager.getDefaultSharedPreferences(this@MainActivity)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

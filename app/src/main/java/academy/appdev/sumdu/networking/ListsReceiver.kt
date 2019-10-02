@@ -2,11 +2,12 @@ package academy.appdev.sumdu.networking
 
 import academy.appdev.sumdu.*
 import academy.appdev.sumdu.networking.retrofit.Api.baseUrl
+import android.app.Activity
 import org.jsoup.Jsoup
 import java.io.IOException
 
 
-fun MainActivity.getLists(handler: () -> Unit) {
+fun Activity.getLists(handler: () -> Unit) {
     AsynkHandler {
         try {
             // Download HTML document and parse `select` objects

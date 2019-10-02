@@ -9,8 +9,6 @@ import kotlinx.android.synthetic.main.container_fragment_layout.*
 
 class ContainerFragment : Fragment() {
 
-    private lateinit var tabsAdapter: TabsAdapter
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
@@ -35,15 +33,13 @@ class ContainerFragment : Fragment() {
     }
 
     private fun setUpTabs() {
-        tabsAdapter = TabsAdapter(childFragmentManager)
-        tabsAdapter.apply {
+        viewPager.adapter = TabsAdapter(childFragmentManager).apply {
             addFragment(HistoryTabFragment(), getString(R.string.history))
             addFragment(GroupTabFragment(), getString(R.string.group))
             addFragment(TeacherTabFragment(), getString(R.string.teacher))
             addFragment(AuditoriumTabFragment(), getString(R.string.auditorium))
         }
 
-        viewPager.adapter = tabsAdapter
         tabLayout.setupWithViewPager(viewPager)
 
         tabLayout.getTabAt(0)?.setIcon(R.drawable.ic_history)
