@@ -4,6 +4,10 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
+apply plugin: 'com.google.gms.google-services'
+
+apply plugin: 'io.fabric'
+
 android {
     compileSdkVersion 29
     defaultConfig {
@@ -43,4 +47,5 @@ dependencies {
     
     implementation "androidx.preference:preference-ktx:1.1.0"
 
+    implementation 'com.google.firebase:firebase-analytics:17.2.0'
 }
