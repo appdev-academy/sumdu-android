@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.list_item_layout.view.*
+import java.text.Collator
 
 
 class TabListAdapter(private var data: List<ListObject>, private val owner: TabFragment) :
@@ -31,7 +32,8 @@ class TabListAdapter(private var data: List<ListObject>, private val owner: TabF
 
     private fun mixGeneralArray() {
         generalData = ArrayList()
-        data.sortedBy { it.title }.forEach {
+
+        data.sortedWith(compareBy(Collator.getInstance()) { it.title }).forEach {
             val letter = it.title?.get(0)?.toString()
             if (letter != null && !generalData.contains(letter ?: "")) {
                 generalData.add(letter.toUpperCase())
