@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "9711528499",
+    "firebase_url": "https://sumdu-4363a.firebaseio.com",
+    "project_id": "sumdu-4363a",
+    "storage_bucket": "sumdu-4363a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:9711528499:android:1732565abdc2dd26011146",
+        "android_client_info": {
+          "package_name": "academy.appdev.sumdu"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "9711528499-b9c3dguso9luk71qslhtrubmpg7f3flh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARAp3nHCRH0964a5m_PtmKcc3v-bfoZhY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "9711528499-b9c3dguso9luk71qslhtrubmpg7f3flh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "9711528499-abma08bk57i1h4nbjlbjsal161ab9uoi.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "Maksym.Skliarov.SumDU",
+                "app_store_id": "698235283"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
