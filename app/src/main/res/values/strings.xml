@@ -1,0 +1,21 @@
+<resources>
+     <string name="app_name">SumDu</string>
+
+    <string name="history">History</string>
+    <string name="group">Group</string>
+    <string name="teacher">Teacher</string>
+    <string name="auditorium">Auditorium</string>
+
+    <string name="refresh">Refresh</string>
+    <string name="search">Search</string>
+    <string name="save_to_calendar">Save to Calendar</string>
+
+    <string name="history_delete">Delete history</string>
+    <string name="delete_item">Delete item</string>
+    <string name="clear_history">Clear history</string>
+    <string name="history_is_empty">History is empty</string>
+
+    <string name="can_not_load_list">Can`t load list</string>
+    <string name="can_not_load_content">Can`t load schedule</string>
+    <string name="can_not_load_content_offline">Can`t load schedule. Offline stored data is viewing</string>
+</resources>
