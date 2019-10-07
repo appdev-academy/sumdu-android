@@ -14,11 +14,18 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
-fun TabFragment.refreshData(key: String) {
-    setNewData(
-        parseStringToArrayList(mainActivity?.sharedPreferences?.getString(key, ""))
-            ?: arrayListOf()
-    )
+fun TabFragment.refreshData() {
+    val filteredArray = ArrayList<ListObject>()
+    val generalArrayList = parseStringToArrayList(mainActivity?.sharedPreferences?.getString(key, ""))
+        ?: arrayListOf()
+    generalArrayList.forEach {
+        if (it.title?.toLowerCase()?.contains(searchQuery.toLowerCase()) == true) {
+            filteredArray.add(it)
+        }
+    }
+    data = filteredArray
+    setNewData(filteredArray)
+
     swipeRefreshLayout.isRefreshing = false
 }
 

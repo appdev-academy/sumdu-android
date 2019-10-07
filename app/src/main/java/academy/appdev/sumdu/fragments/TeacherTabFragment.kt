@@ -10,14 +10,16 @@ import kotlinx.android.synthetic.main.tab_list_layout.*
 
 class TeacherTabFragment : TabFragment() {
 
+    override var key: String = TEACHERS_KEY
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        refreshData(TEACHERS_KEY)
+        refreshData()
     }
 
     override fun setUpSwipeRefresh() {
         swipeRefreshLayout.setOnRefreshListener {
-            mainActivity?.getLists { refreshData(TEACHERS_KEY) }
+            mainActivity?.getLists { refreshData() }
         }
     }
 }

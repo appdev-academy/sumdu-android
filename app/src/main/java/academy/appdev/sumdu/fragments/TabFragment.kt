@@ -1,12 +1,11 @@
 package academy.appdev.sumdu.fragments
 
-import academy.appdev.sumdu.R
+import academy.appdev.sumdu.*
 import academy.appdev.sumdu.adapters.HeaderItemDecorator
 import academy.appdev.sumdu.adapters.TabListAdapter
-import academy.appdev.sumdu.mainActivity
 import academy.appdev.sumdu.networking.getLists
+import academy.appdev.sumdu.networking.parseStringToArrayList
 import academy.appdev.sumdu.objects.ListObject
-import academy.appdev.sumdu.saveToHistory
 import android.os.Bundle
 import android.view.*
 import androidx.appcompat.widget.SearchView
@@ -17,15 +16,19 @@ import kotlinx.android.synthetic.main.tab_list_layout.*
 
 open class TabFragment : Fragment() {
 
-    private var data = emptyList<ListObject>()
+    open var key = ""
+
+    var data = emptyList<ListObject>()
+
+    var searchQuery = ""
 
     val dataIsEmpty get() = data.isNullOrEmpty()
 
-    protected var listAdapter: TabListAdapter? = null
+    private var listAdapter: TabListAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
+//        setHasOptionsMenu(true)
     }
 
     override fun onCreateView(
@@ -41,10 +44,10 @@ open class TabFragment : Fragment() {
         setUpRecycler()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        searchSetUp(menu)
-    }
+//    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+//        super.onCreateOptionsMenu(menu, inflater)
+//        searchSetUp(menu)
+//    }
 
     fun setNewData(newData: ArrayList<ListObject>) {
         if (listAdapter != null) {
@@ -74,29 +77,34 @@ open class TabFragment : Fragment() {
         }
     }
 
-    private fun searchSetUp(menu: Menu?) {
-        val search = menu?.findItem(R.id.search)
-        val searchView = search?.actionView as SearchView?
-        searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String): Boolean {
-                return false
-            }
+//    private fun searchSetUp(menu: Menu?) {
+//        val search = menu?.findItem(R.id.search)
+//        val searchView = search?.actionView as SearchView?
+//        searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+//            override fun onQueryTextSubmit(query: String): Boolean {
+//                return false
+//            }
+//
+//            override fun onQueryTextChange(newText: String): Boolean {
+//                listAdapter?.setNewData(filterArrayListWithQuery(newText))
+//                return false
+//            }
+//        })
+//    }
 
-            override fun onQueryTextChange(newText: String): Boolean {
-                listAdapter?.setNewData(filterArrayListWithQuery(newText))
-                return false
-            }
-        })
-    }
-
-    fun filterArrayListWithQuery(query: String): ArrayList<ListObject> {
+    fun filterWithQuery() {
         val filteredArray = ArrayList<ListObject>()
-        for (record in data) {
-            if (record.title?.toLowerCase()?.contains(query.toLowerCase()) == true) {
-                filteredArray.add(record)
+        val generalArrayList = parseStringToArrayList(mainActivity?.sharedPreferences?.getString(key, ""))
+            ?: arrayListOf()
+        generalArrayList.forEach {
+            if (it.title?.toLowerCase()?.contains(searchQuery.toLowerCase()) == true) {
+                filteredArray.add(it)
             }
         }
-        return filteredArray
+        data = filteredArray
+        setNewData(filteredArray)
+
+        swipeRefreshLayout.isRefreshing = false
     }
 
     fun onItemClicked(listObject: ListObject) {
