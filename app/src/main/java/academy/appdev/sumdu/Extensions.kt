@@ -26,8 +26,6 @@ fun TabFragment.refreshData() {
     }
     data = filteredArray
     setNewData(filteredArray)
-
-    swipeRefreshLayout.isRefreshing = false
 }
 
 fun TabFragment.saveToHistory(

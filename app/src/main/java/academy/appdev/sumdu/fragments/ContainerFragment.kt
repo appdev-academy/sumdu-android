@@ -8,7 +8,6 @@ import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.container_fragment_layout.*
-import androidx.viewpager.widget.ViewPager.OnPageChangeListener
 
 
 class ContainerFragment : Fragment() {
@@ -51,25 +50,7 @@ class ContainerFragment : Fragment() {
             addFragment(tabsList[3], getString(R.string.auditorium))
         }
 
-        viewPager.addOnPageChangeListener(object : OnPageChangeListener {
-            override fun onPageScrollStateChanged(state: Int) {}
-
-            override fun onPageScrolled(
-                position: Int,
-                positionOffset: Float,
-                positionOffsetPixels: Int
-            ){}
-
-            override fun onPageSelected(position: Int) {
-                tabsList[position].apply {
-                    searchQuery = queryString
-                    refreshData()
-                }
-            }
-        })
-
         tabLayout.setupWithViewPager(viewPager)
-
         tabLayout.getTabAt(0)?.setIcon(R.drawable.ic_history)
     }
 
@@ -84,8 +65,8 @@ class ContainerFragment : Fragment() {
             override fun onQueryTextChange(newText: String): Boolean {
                 queryString = newText
 
-                if (viewPager?.currentItem != null) {
-                    tabsList[viewPager.currentItem].apply {
+                tabsList.forEach {
+                    it.apply {
                         searchQuery = newText
                         refreshData()
                     }

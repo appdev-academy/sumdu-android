@@ -19,7 +19,10 @@ class TeacherTabFragment : TabFragment() {
 
     override fun setUpSwipeRefresh() {
         swipeRefreshLayout.setOnRefreshListener {
-            mainActivity?.getLists { refreshData() }
+            mainActivity?.getLists {
+                refreshData()
+                swipeRefreshLayout?.isRefreshing = false
+            }
         }
     }
 }
