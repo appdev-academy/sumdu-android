@@ -12,15 +12,17 @@ import kotlinx.android.synthetic.main.tab_list_layout.*
 
 class HistoryTabFragment : TabFragment() {
 
+    override var key: String = HISTORY_KEY
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        refreshData(HISTORY_KEY)
+        refreshData()
         setUpHistoryPlaceholder()
     }
 
     override fun onResume() {
         super.onResume()
-        refreshData(HISTORY_KEY)
+        refreshData()
         setUpHistoryPlaceholder()
     }
 
@@ -49,7 +51,7 @@ class HistoryTabFragment : TabFragment() {
                     remove(HISTORY_KEY)
                 }?.apply()
 
-                refreshData(HISTORY_KEY)
+                refreshData()
                 setUpHistoryPlaceholder()
             }
 
@@ -92,7 +94,7 @@ class HistoryTabFragment : TabFragment() {
             apply()
         }
 
-        refreshData(HISTORY_KEY)
+        refreshData()
         setUpHistoryPlaceholder()
     }
 }

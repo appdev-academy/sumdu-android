@@ -10,14 +10,19 @@ import kotlinx.android.synthetic.main.tab_list_layout.*
 
 class GroupTabFragment : TabFragment() {
 
+    override var key: String = GROUPS_KEY
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        refreshData(GROUPS_KEY)
+        refreshData()
     }
 
     override fun setUpSwipeRefresh() {
         swipeRefreshLayout.setOnRefreshListener {
-            mainActivity?.getLists { refreshData(GROUPS_KEY) }
+            mainActivity?.getLists {
+                refreshData()
+                swipeRefreshLayout?.isRefreshing = false
+            }
         }
     }
 }

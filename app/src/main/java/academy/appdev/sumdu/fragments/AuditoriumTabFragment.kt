@@ -10,14 +10,19 @@ import kotlinx.android.synthetic.main.tab_list_layout.*
 
 class AuditoriumTabFragment : TabFragment() {
 
+    override var key: String = AUDITORIUMS_KEY
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        refreshData(AUDITORIUMS_KEY)
+        refreshData()
     }
 
     override fun setUpSwipeRefresh() {
         swipeRefreshLayout.setOnRefreshListener {
-            mainActivity?.getLists { refreshData(AUDITORIUMS_KEY) }
+            mainActivity?.getLists {
+                refreshData()
+                swipeRefreshLayout?.isRefreshing = false
+            }
         }
     }
 }
