@@ -16,8 +16,9 @@ import java.util.*
 
 fun TabFragment.refreshData() {
     val filteredArray = ArrayList<ListObject>()
-    val generalArrayList = parseStringToArrayList(mainActivity?.sharedPreferences?.getString(key, ""))
-        ?: arrayListOf()
+    val generalArrayList =
+        parseStringToArrayList(mainActivity?.sharedPreferences?.getString(key, ""))
+            ?: arrayListOf()
     generalArrayList.forEach {
         if (it.title?.toLowerCase()?.contains(searchQuery.toLowerCase()) == true) {
             filteredArray.add(it)
@@ -86,6 +87,9 @@ fun Context.makeToast(stringId: Int) {
     Toast.makeText(this, stringId, Toast.LENGTH_SHORT).show()
 }
 
-val Context.sharedPreferences: SharedPreferences get() = PreferenceManager.getDefaultSharedPreferences(this)
+val Context.sharedPreferences: SharedPreferences
+    get() = PreferenceManager.getDefaultSharedPreferences(
+        this
+    )
 
 val Date.stringValue: String get() = run { SimpleDateFormat("dd.MM.yyyy").format(this) }
