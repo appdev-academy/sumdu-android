@@ -13,7 +13,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
-        android:hardwareAccelerated="false"
         tools:ignore="GoogleAppIndexingWarning">
 
         <activity
