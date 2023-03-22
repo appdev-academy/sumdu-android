@@ -8,7 +8,7 @@ import android.content.SharedPreferences
 import android.widget.Toast
 import androidx.preference.PreferenceManager
 import com.google.gson.Gson
-import kotlinx.android.synthetic.main.tab_list_layout.*
+import com.google.gson.JsonObject
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -91,3 +91,5 @@ val Context.sharedPreferences: SharedPreferences
     )
 
 val Date.stringValue: String get() = run { SimpleDateFormat("dd.MM.yyyy").format(this) }
+
+fun JsonObject.toMap() = this.entrySet().associate { it.key to it.value.toString() }
