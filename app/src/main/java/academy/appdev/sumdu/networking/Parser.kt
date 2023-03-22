@@ -4,23 +4,14 @@ import academy.appdev.sumdu.objects.ContentObject
 import academy.appdev.sumdu.objects.ListObject
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import org.jsoup.nodes.Element
 import java.util.ArrayList
 
 
-fun parseListObjects(element: Element, objectType: String): String {
-    // Loops through options of HTML select element and map entries to ListObjects
+fun parseListObjects(hashMap: Map<String, String>, objectType: String): String {
     val records = ArrayList<ListObject>()
-    for (option in element.children()) {
-        // Validate pairTitleAndType on import
-        val title = option.text().trim { it <= ' ' }
-        if (title.length > 1) {
-            records.add(ListObject().apply {
-                this.id = option.attr("value")
-                this.objectType = objectType
-                this.title = title
-            })
-        }
+    hashMap.forEach {
+        val title = it.value.replace("\"", "")
+        if (title.isNotEmpty()) records.add(ListObject(it.key, title, objectType))
     }
     return Gson().toJson(records.sortedBy { it.title })
 }

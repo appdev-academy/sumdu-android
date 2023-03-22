@@ -4,6 +4,7 @@ import academy.appdev.sumdu.appLocale
 import academy.appdev.sumdu.objects.ContentObject
 import android.content.Context
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -12,7 +13,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object Api {
 
-    fun baseUrl(context: Context?): String =
+    private fun baseUrl(context: Context?): String =
         if (context?.appLocale?.language == "ru" || context?.appLocale?.language == "uk") "http://schedule.sumdu.edu.ua/" else "http://schedule.sumdu.edu.ua/en/"
 
     private fun service(context: Context?): IObjectLoader = Retrofit.Builder()
@@ -57,6 +58,33 @@ object Api {
         onFailure: (throwable: Throwable) -> Unit
     ) {
         service(context).getAuditoriumContent(id, dateBeg, dateEnd)
+            .enqueue(CommonCallbackImplementation(onSuccess, onFailure))
+    }
+
+    fun getTeachersRequest(
+        context: Context,
+        onSuccess: (JsonObject?) -> Unit,
+        onFailure: (throwable: Throwable) -> Unit
+    ) {
+        service(context).getTeachers()
+            .enqueue(CommonCallbackImplementation(onSuccess, onFailure))
+    }
+
+    fun getGroupsRequest(
+        context: Context,
+        onSuccess: (JsonObject?) -> Unit,
+        onFailure: (throwable: Throwable) -> Unit
+    ) {
+        service(context).getGroups()
+            .enqueue(CommonCallbackImplementation(onSuccess, onFailure))
+    }
+
+    fun getAuditoriumsRequest(
+        context: Context,
+        onSuccess: (JsonObject?) -> Unit,
+        onFailure: (throwable: Throwable) -> Unit
+    ) {
+        service(context).getAuditoriums()
             .enqueue(CommonCallbackImplementation(onSuccess, onFailure))
     }
 

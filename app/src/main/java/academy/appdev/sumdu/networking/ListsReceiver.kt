@@ -1,43 +1,73 @@
 package academy.appdev.sumdu.networking
 
 import academy.appdev.sumdu.*
-import academy.appdev.sumdu.networking.retrofit.Api.baseUrl
+import academy.appdev.sumdu.networking.retrofit.Api
 import android.app.Activity
-import org.jsoup.Jsoup
-import java.io.IOException
+import android.content.Context
 
 
 fun Activity.getLists(handler: () -> Unit) {
-    AsynkHandler {
-        try {
-            // Download HTML document and parse `select` objects
-            val document = Jsoup.connect(baseUrl(this)).get()
-            val auditoriums = document.select("#auditorium").first()
-            val groups = document.select("#group").first()
-            val teachers = document.select("#teacher").first()
+    val dispatchGroup = DispatchGroup()
 
-            // Serialize options of `select` DOM objects
-            val serializedAuditoriums = parseListObjects(auditoriums, "id_aud")
-            val serializedGroups = parseListObjects(groups, "id_grp")
-            val serializedTeachers = parseListObjects(teachers, "id_fio")
+    getAuditorium(baseContext, dispatchGroup)
+    getGroup(baseContext, dispatchGroup)
+    getTeacher(baseContext, dispatchGroup)
 
-            // Save lists of Auditoriums, Groups and Teachers to SharedPreferences
-            sharedPreferences.edit()?.apply {
-                putString(AUDITORIUMS_KEY, serializedAuditoriums)
-                putString(GROUPS_KEY, serializedGroups)
-                putString(TEACHERS_KEY, serializedTeachers)
-                apply()
+    dispatchGroup.notify {
+        handler()
+    }
+}
+
+private fun getTeacher(baseContext: Context, dispatchGroup: DispatchGroup) {
+    dispatchGroup.enter()
+    Api.getTeachersRequest(
+        baseContext,
+        onSuccess = {
+            if (it != null) {
+                val serializedTeachers = parseListObjects(it.toMap(), "id_fio")
+                baseContext.sharedPreferences.edit()?.apply {
+                    putString(TEACHERS_KEY, serializedTeachers)
+                    apply()
+                }
             }
+            dispatchGroup.leave()
+        },
+        onFailure = { dispatchGroup.leave() }
+    )
+}
 
-            this.runOnUiThread { handler() }
-
-        } catch (e: IOException) {
-            e.printStackTrace()
-
-            this.runOnUiThread {
-                handler()
-                applicationContext?.makeToast(R.string.can_not_load_list)
+private fun getAuditorium(baseContext: Context, dispatchGroup: DispatchGroup) {
+    dispatchGroup.enter()
+    Api.getAuditoriumsRequest(
+        baseContext,
+        onSuccess = {
+            if (it != null) {
+                val serializedGroups = parseListObjects(it.toMap(), "id_aud")
+                baseContext.sharedPreferences.edit()?.apply {
+                    putString(AUDITORIUMS_KEY, serializedGroups)
+                    apply()
+                }
             }
-        }
-    }.execute()
+            dispatchGroup.leave()
+        },
+        onFailure = { dispatchGroup.leave() }
+    )
+}
+
+private fun getGroup(baseContext: Context, dispatchGroup: DispatchGroup) {
+    dispatchGroup.enter()
+    Api.getGroupsRequest(
+        baseContext,
+        onSuccess = {
+            if (it != null) {
+                val serializedGroups = parseListObjects(it.toMap(), "id_grp")
+                baseContext.sharedPreferences.edit()?.apply {
+                    putString(GROUPS_KEY, serializedGroups)
+                    apply()
+                }
+            }
+            dispatchGroup.leave()
+        },
+        onFailure = { dispatchGroup.leave() }
+    )
 }
