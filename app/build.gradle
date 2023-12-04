@@ -15,12 +15,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
-        debug {
-            manifestPlaceholders = [enableCrashReporting: "false"]
-        }
-
         release {
-            manifestPlaceholders = [enableCrashReporting: "true"]
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -51,7 +46,7 @@ dependencies {
     // Firebase
     implementation platform('com.google.firebase:firebase-bom:32.0.0')
     implementation 'com.google.firebase:firebase-crashlytics-ktx'
-    implementation 'com.google.firebase:firebase-analytics-ktx'
+    releaseImplementation 'com.google.firebase:firebase-crashlytics-ktx'
 
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 }

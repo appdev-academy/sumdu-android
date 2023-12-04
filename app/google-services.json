@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "9711528499-o033r1rdaa7891eupvnd9fjmv27uu5re.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "academy.appdev.sumdu",
+            "certificate_hash": "438ab08ee47532e8ff6567826b8a17300cc8a406"
+          }
+        },
+        {
           "client_id": "9711528499-b9c3dguso9luk71qslhtrubmpg7f3flh.apps.googleusercontent.com",
           "client_type": 3
         }
