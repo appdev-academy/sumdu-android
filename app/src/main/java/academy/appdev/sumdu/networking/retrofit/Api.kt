@@ -5,6 +5,8 @@ import academy.appdev.sumdu.objects.ContentObject
 import android.content.Context
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -23,6 +25,7 @@ object Api {
                 GsonBuilder().setLenient().create()
             )
         )
+        .client(OkHttpClient.Builder().addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }).build())
         .build().create(IObjectLoader::class.java)
 
     fun loadGroupContent(
