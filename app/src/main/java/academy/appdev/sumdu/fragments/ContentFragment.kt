@@ -130,8 +130,8 @@ class ContentFragment : Fragment() {
 
     // Building up URL for getting .ics file
     private fun icsURL(chosenID: String?, contentID: String?): String {
-        return Uri.Builder().scheme("http")
-            .authority("schedule.sumdu.edu.ua")
+        return Uri.Builder().scheme("https")
+            .authority("sh.cabinet.sumdu.edu.ua")
             .appendPath("index")
             .appendPath("ical")
             .appendQueryParameter(chosenID, contentID)

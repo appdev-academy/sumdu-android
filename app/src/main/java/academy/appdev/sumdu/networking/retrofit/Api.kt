@@ -36,7 +36,11 @@ object Api {
         onSuccess: (List<ContentObject>?) -> Unit,
         onFailure: (throwable: Throwable) -> Unit
     ) {
-        service(context).getGroupContent(id, dateBeg, dateEnd)
+        service(context).getGroupContent(
+            id = id,
+            dateBeginning = dateBeg,
+            dateEnd = dateEnd
+        )
             .enqueue(CommonCallbackImplementation(onSuccess, onFailure))
     }
 
@@ -48,7 +52,11 @@ object Api {
         onSuccess: (List<ContentObject>?) -> Unit,
         onFailure: (throwable: Throwable) -> Unit
     ) {
-        service(context).getTeacherContent(id, dateBeg, dateEnd)
+        service(context).getTeacherContent(
+            id = id,
+            dateBeginning = dateBeg,
+            dateEnd = dateEnd
+        )
             .enqueue(CommonCallbackImplementation(onSuccess, onFailure))
     }
 
@@ -60,7 +68,11 @@ object Api {
         onSuccess: (List<ContentObject>?) -> Unit,
         onFailure: (throwable: Throwable) -> Unit
     ) {
-        service(context).getAuditoriumContent(id, dateBeg, dateEnd)
+        service(context).getAuditoriumContent(
+            id = id,
+            dateBeginning = dateBeg,
+            dateEnd = dateEnd
+        )
             .enqueue(CommonCallbackImplementation(onSuccess, onFailure))
     }
 
