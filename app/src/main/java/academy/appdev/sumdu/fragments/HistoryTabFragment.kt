@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.view.isVisible
 import com.google.gson.Gson
-import kotlinx.android.synthetic.main.tab_list_layout.*
 
 class HistoryTabFragment : TabFragment() {
 
@@ -27,7 +26,7 @@ class HistoryTabFragment : TabFragment() {
     }
 
     override fun setUpSwipeRefresh() {
-        swipeRefreshLayout.isEnabled = false
+        binding.swipeRefreshLayout.isEnabled = false
     }
 
     override fun onLongClick(listObject: ListObject) {
@@ -62,11 +61,11 @@ class HistoryTabFragment : TabFragment() {
 
     private fun setUpHistoryPlaceholder() {
         if (dataIsEmpty) {
-            historyPlaceholderLayout.isVisible = true
-            swipeRefreshLayout.isVisible = false
+            binding.historyPlaceholderLayout.isVisible = true
+            binding.swipeRefreshLayout.isVisible = false
         } else {
-            historyPlaceholderLayout.isVisible = false
-            swipeRefreshLayout.isVisible = true
+            binding.historyPlaceholderLayout.isVisible = false
+            binding.swipeRefreshLayout.isVisible = true
         }
     }
 

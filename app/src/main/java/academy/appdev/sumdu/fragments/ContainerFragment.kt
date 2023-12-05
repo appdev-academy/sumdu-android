@@ -2,35 +2,25 @@ package academy.appdev.sumdu.fragments
 
 import academy.appdev.sumdu.R
 import academy.appdev.sumdu.adapters.TabsAdapter
+import academy.appdev.sumdu.databinding.ContainerFragmentLayoutBinding
 import academy.appdev.sumdu.refreshData
 import android.os.Bundle
 import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
-import kotlinx.android.synthetic.main.container_fragment_layout.*
 
+class ContainerFragment : Fragment(R.layout.container_fragment_layout) {
 
-class ContainerFragment : Fragment() {
+    private lateinit var binding: ContainerFragmentLayoutBinding
 
     private var tabsList = arrayListOf<TabFragment>()
 
     private var queryString = ""
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.container_fragment_layout, container, false)
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setHasOptionsMenu(true)
+        binding = ContainerFragmentLayoutBinding.bind(view)
         setUpTabs()
     }
 
@@ -43,15 +33,15 @@ class ContainerFragment : Fragment() {
     private fun setUpTabs() {
         tabsListFilling()
 
-        viewPager.adapter = TabsAdapter(childFragmentManager).apply {
+        binding.viewPager.adapter = TabsAdapter(childFragmentManager).apply {
             addFragment(tabsList[0], getString(R.string.history))
             addFragment(tabsList[1], getString(R.string.group))
             addFragment(tabsList[2], getString(R.string.teacher))
             addFragment(tabsList[3], getString(R.string.auditorium))
         }
 
-        tabLayout.setupWithViewPager(viewPager)
-        tabLayout.getTabAt(0)?.setIcon(R.drawable.ic_history)
+        binding.tabLayout.setupWithViewPager(binding.viewPager)
+        binding.tabLayout.getTabAt(0)?.setIcon(R.drawable.ic_history)
     }
 
     private fun searchSetUp(menu: Menu?) {
