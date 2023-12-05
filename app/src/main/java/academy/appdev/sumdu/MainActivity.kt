@@ -1,17 +1,20 @@
 package academy.appdev.sumdu
 
+import academy.appdev.sumdu.databinding.ActivityMainBinding
 import academy.appdev.sumdu.fragments.ContainerFragment
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         configureToolbar()
 
@@ -21,7 +24,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun configureToolbar() {
-        setSupportActionBar(toolbar)
+        setSupportActionBar(binding.toolbar)
 
         supportFragmentManager.addOnBackStackChangedListener {
             if (supportFragmentManager.backStackEntryCount <= 0) {

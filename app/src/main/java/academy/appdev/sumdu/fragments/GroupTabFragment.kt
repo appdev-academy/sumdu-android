@@ -6,8 +6,6 @@ import academy.appdev.sumdu.networking.getLists
 import academy.appdev.sumdu.refreshData
 import android.os.Bundle
 import android.view.View
-import kotlinx.android.synthetic.main.tab_list_layout.*
-
 class GroupTabFragment : TabFragment() {
 
     override var key: String = GROUPS_KEY
@@ -18,10 +16,10 @@ class GroupTabFragment : TabFragment() {
     }
 
     override fun setUpSwipeRefresh() {
-        swipeRefreshLayout.setOnRefreshListener {
+        binding.swipeRefreshLayout.setOnRefreshListener {
             mainActivity?.getLists {
                 refreshData()
-                swipeRefreshLayout?.isRefreshing = false
+                binding.swipeRefreshLayout.isRefreshing = false
             }
         }
     }

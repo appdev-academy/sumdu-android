@@ -5,6 +5,8 @@ import academy.appdev.sumdu.objects.ContentObject
 import android.content.Context
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -23,6 +25,7 @@ object Api {
                 GsonBuilder().setLenient().create()
             )
         )
+        .client(OkHttpClient.Builder().addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }).build())
         .build().create(IObjectLoader::class.java)
 
     fun loadGroupContent(
@@ -33,7 +36,11 @@ object Api {
         onSuccess: (List<ContentObject>?) -> Unit,
         onFailure: (throwable: Throwable) -> Unit
     ) {
-        service(context).getGroupContent(id, dateBeg, dateEnd)
+        service(context).getGroupContent(
+            id = id,
+            dateBeginning = dateBeg,
+            dateEnd = dateEnd
+        )
             .enqueue(CommonCallbackImplementation(onSuccess, onFailure))
     }
 
@@ -45,7 +52,11 @@ object Api {
         onSuccess: (List<ContentObject>?) -> Unit,
         onFailure: (throwable: Throwable) -> Unit
     ) {
-        service(context).getTeacherContent(id, dateBeg, dateEnd)
+        service(context).getTeacherContent(
+            id = id,
+            dateBeginning = dateBeg,
+            dateEnd = dateEnd
+        )
             .enqueue(CommonCallbackImplementation(onSuccess, onFailure))
     }
 
@@ -57,7 +68,11 @@ object Api {
         onSuccess: (List<ContentObject>?) -> Unit,
         onFailure: (throwable: Throwable) -> Unit
     ) {
-        service(context).getAuditoriumContent(id, dateBeg, dateEnd)
+        service(context).getAuditoriumContent(
+            id = id,
+            dateBeginning = dateBeg,
+            dateEnd = dateEnd
+        )
             .enqueue(CommonCallbackImplementation(onSuccess, onFailure))
     }
 

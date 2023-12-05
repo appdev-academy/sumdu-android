@@ -3,6 +3,7 @@ package academy.appdev.sumdu.fragments
 import academy.appdev.sumdu.*
 import academy.appdev.sumdu.adapters.ContentAdapter
 import academy.appdev.sumdu.adapters.HeaderItemDecorator
+import academy.appdev.sumdu.databinding.TabListLayoutBinding
 import academy.appdev.sumdu.networking.parseListToJson
 import academy.appdev.sumdu.networking.parseStringToList
 import academy.appdev.sumdu.objects.ContentObject
@@ -15,15 +16,10 @@ import android.view.*
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.synthetic.main.tab_list_layout.*
 import java.util.*
 
 
-class ContentFragment : Fragment() {
-
-    init {
-        setHasOptionsMenu(true)
-    }
+class ContentFragment : Fragment(R.layout.tab_list_layout) {
 
     companion object {
         /**
@@ -32,34 +28,30 @@ class ContentFragment : Fragment() {
         var contentObject: ListObject? = null
     }
 
+    private lateinit var binding: TabListLayoutBinding
+
     private var data = emptyList<ContentObject>()
 
     private lateinit var listAdapter: ContentAdapter
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.tab_list_layout, container, false)
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setHasOptionsMenu(true)
+        binding = TabListLayoutBinding.bind(view)
+
         mainActivity?.supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             setDisplayShowHomeEnabled(true)
             title = contentObject?.title
         }
 
-        swipeRefreshLayout.setOnRefreshListener {
-            swipeRefreshLayout.isRefreshing = false
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            binding.swipeRefreshLayout.isRefreshing = false
             getResponse()
         }
 
         setUpRecycler()
         getResponse()
-
-        super.onViewCreated(view, savedInstanceState)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -85,23 +77,16 @@ class ContentFragment : Fragment() {
     }
 
     private fun getResponse() {
-        progressSpinner.isVisible = true
+        binding.progressSpinner.isVisible = true
 
         contentObject?.apply {
             val startDate = Date().stringValue
 
             when (objectType) {
-                "id_grp" -> {
-                    Api.loadGroupContent(context, id, startDate, endDate(), ::onLoaded, ::onFailure)
-                }
-                "id_fio" -> {
-                    Api.loadTeacherContent(context, id, startDate, endDate(), ::onLoaded, ::onFailure)
-                }
-                "id_aud" -> {
-                    Api.loadAuditoriumContent(context, id, startDate, endDate(), ::onLoaded, ::onFailure)
-                }
+                "id_grp" -> Api.loadGroupContent(context, id, startDate, endDate(), ::onLoaded, ::onFailure)
+                "id_fio" -> Api.loadTeacherContent(context, id, startDate, endDate(), ::onLoaded, ::onFailure)
+                "id_aud" -> Api.loadAuditoriumContent(context, id, startDate, endDate(), ::onLoaded, ::onFailure)
             }
-
         }
     }
 
@@ -113,11 +98,11 @@ class ContentFragment : Fragment() {
             apply()
         }
 
-        progressSpinner?.isVisible = false
+        binding.progressSpinner.isVisible = false
     }
 
     private fun onFailure(throwable: Throwable) {
-        progressSpinner?.isVisible = false
+        binding.progressSpinner.isVisible = false
         context?.makeToast(if (data.isNullOrEmpty()) R.string.can_not_load_content else R.string.can_not_load_content_offline)
     }
 
@@ -130,8 +115,8 @@ class ContentFragment : Fragment() {
 
     // Building up URL for getting .ics file
     private fun icsURL(chosenID: String?, contentID: String?): String {
-        return Uri.Builder().scheme("http")
-            .authority("schedule.sumdu.edu.ua")
+        return Uri.Builder().scheme("https")
+            .authority("sh.cabinet.sumdu.edu.ua")
             .appendPath("index")
             .appendPath("ical")
             .appendQueryParameter(chosenID, contentID)
@@ -142,7 +127,7 @@ class ContentFragment : Fragment() {
 
     private fun setUpRecycler() {
         getStoredContent()
-        recyclerView.apply {
+        binding.recyclerView.apply {
             setHasFixedSize(true)
             listAdapter = ContentAdapter(data, contentObject?.objectType?.equals("id_grp"))
             adapter = listAdapter

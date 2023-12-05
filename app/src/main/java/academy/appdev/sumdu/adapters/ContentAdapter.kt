@@ -1,19 +1,16 @@
 package academy.appdev.sumdu.adapters
 
 import academy.appdev.sumdu.*
+import academy.appdev.sumdu.databinding.ContentListItemLayoutBinding
+import academy.appdev.sumdu.databinding.ListHeaderLayoutBinding
 import academy.appdev.sumdu.objects.ContentObject
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.content_list_item_layout.view.*
-import kotlinx.android.synthetic.main.list_header_layout.view.*
-import kotlinx.android.synthetic.main.list_item_layout.view.titleText
 import java.text.SimpleDateFormat
 
 
-class ContentAdapter(private var data: List<ContentObject>, private val forGroup: Boolean?) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class ContentAdapter(private var data: List<ContentObject>, private val forGroup: Boolean?) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var generalData: ArrayList<Any> = ArrayList()
 
@@ -45,60 +42,49 @@ class ContentAdapter(private var data: List<ContentObject>, private val forGroup
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (viewType == ITEM) {
-            ItemViewHolder(
-                LayoutInflater.from(parent.context).inflate(
-                    R.layout.content_list_item_layout,
-                    parent,
-                    false
-                )
-            )
+            val binding = ContentListItemLayoutBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            ItemViewHolder(binding)
         } else {
-            HeaderViewHolder(
-                LayoutInflater.from(parent.context).inflate(
-                    R.layout.list_header_layout,
-                    parent,
-                    false
-                )
-            )
+            val binding = ListHeaderLayoutBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            HeaderViewHolder(binding)
         }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is HeaderViewHolder -> {
-                holder.itemView.apply {
-                    val date = generalData[position] as String
-                    titleText.text = date.formatDayMonth(context)
-                    dayOfWeekText.text = SimpleDateFormat("EEEE", context?.appLocale).format(date.toDate())
-                }
+                val dataObject = (generalData[position] as? String) ?: return
+                holder.bind(dataObject)
             }
+
             is ItemViewHolder -> {
-                holder.itemView.apply {
-                    val listObject = generalData[position] as ContentObject
-                    listObject.apply {
-                        titleText.text =
-                            if (!pairType.isNullOrBlank()) "$title ($pairType)" else title
-                        pairTimeText.text = time
-                        auditoriumAndGroupText.text = if (forGroup == true) auditorium else group
-                        teacherText.text = teacher
-                    }
-                }
+                val dataObject = (generalData[position] as? ContentObject) ?: return
+                holder.bind(dataObject)
             }
         }
     }
 
-    override fun getItemCount(): Int {
-        return generalData.size
+    override fun getItemCount() = generalData.size
+
+    override fun getItemViewType(position: Int) = if (isPositionHeader(position)) ITEM else HEADER
+
+    private fun isPositionHeader(position: Int) = generalData[position] is ContentObject
+
+    inner class HeaderViewHolder(private val binding: ListHeaderLayoutBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(date: String) {
+            binding.titleText.text = date.formatDayMonth(binding.root.context)
+            binding.dayOfWeekText.text = SimpleDateFormat("EEEE", binding.root.context?.appLocale).format(date.toDate())
+        }
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return if (isPositionHeader(position)) ITEM else HEADER
+    inner class ItemViewHolder(private val binding: ContentListItemLayoutBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(listObject: ContentObject) {
+            with(listObject) {
+                binding.titleText.text = if (!pairType.isNullOrBlank()) "$title ($pairType)" else title
+                binding.pairTimeText.text = time
+                binding.auditoriumAndGroupText.text = if (forGroup == true) auditorium else group
+                binding.teacherText.text = teacher
+            }
+        }
     }
-
-    private fun isPositionHeader(position: Int): Boolean {
-        return generalData[position] is ContentObject
-    }
-
-    inner class ItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
-    inner class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 }
